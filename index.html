@@ -1,0 +1,28 @@
+<html>
+
+<head>
+    <title>A Multiplayer Game</title>
+    <style>
+        body {
+        margin: 0;
+        }
+    </style>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+    <!--Leaderboard-->
+    <div id = "leaderboard">
+        <h3>Leaderboard</h3>
+        <ol id = "leaders">
+
+        </ol>
+    </div>
+    <canvas id="screen"></canvas>
+</body>
+<script src="/static/game.js"></script>
+<!--Images-->
+<img src="/textures/background/backgroundTile4.png" id= backgroundTile style="display: none;">
+
+</html>
