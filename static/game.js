@@ -62,7 +62,7 @@ var currentPlayer = {
     health: 100
 };
 
-var socket = io();
+var socket = io('http://192.168.0.4:5000');
 var movement = {
     rot: 0,
     up: false,
@@ -71,6 +71,7 @@ var movement = {
     right: false
 }
 document.addEventListener('keydown', function (event) {
+    hasMoved = true;
     switch (event.keyCode) {
         case 65: // A
             movement.left = true;
@@ -87,6 +88,7 @@ document.addEventListener('keydown', function (event) {
     }
 });
 document.addEventListener('keyup', function (event) {
+    hasMoved = true;
     switch (event.keyCode) {
         case 65: // A
             movement.left = false;
@@ -106,6 +108,7 @@ document.addEventListener('keyup', function (event) {
     }
 });
 document.addEventListener("mousemove", function (event) {
+    hasMoved = true;
     var angle = Math.atan2(event.pageX - canvasWidth/2, - (event.pageY - canvasHeight/2));
     movement.rot = angle - 1.5708*2;
 });
@@ -146,9 +149,12 @@ socket.on("get id from server", function (id) {
     playerId = id;
 });
 socket.emit('update');
+
+var hasMoved = false;
 setInterval(function () {
-    if(currentPlayer.isAlive){
+    if(currentPlayer.isAlive && hasMoved){
         socket.emit('movement', movement);
+        hasMoved = false;
     }
     
     
@@ -160,10 +166,11 @@ setInterval(function () {
         FireCannon();
     }
 }, bulletFireTime);
-
+var latency = 0;
 socket.on('pong', function (ms) {
-    var latency = ms;
+    latency = ms;
     socket.emit("late", latency);
+    console.log("late: " + ms);
 });
 
 // Dev
@@ -199,28 +206,26 @@ socket.on('done', function(){
     
     
     var time = end();
-    if(time<16){
-        setTimeout(() => {
-            socket.emit("get state");
-            onScreenContext.drawImage(canvas, 0, 0);
-        }, 16-time);
-    }else{
-        socket.emit("get state");
-        onScreenContext.drawImage(canvas, 0, 0);
-    }
+    console.log("new frame");
+    socket.emit("get state");
+    onScreenContext.drawImage(canvas, 0, 0);
+   
 })
 var leaderBoardTick = 0;
+var skippedFrames = 0;
 socket.on('state', function (data) {
+    
+    console.log(new Date()-new Date(data.time));
     start();
     if(data.players[playerId] == undefined){return;}
     if(data.players[playerId].isAlive){
         //context.clearRect(0, 0, canvasWidth, canvasHeight);
         context.save();
-
+        
         // Use the identity matrix while clearing the canvas
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.clearRect(0, 0, canvas.width, canvas.height);
-
+        
         // Restore the transform
         context.restore();
         context.fillStyle = '#dbdbdb';
@@ -259,7 +264,10 @@ socket.on('state', function (data) {
     else {
         ShowGameOverScreenAnim();
     }
-    socket.emit('update');
+    setTimeout(() => {
+        socket.emit('update');
+    }, 16-end());
+    console.log("Frame:" + end());
 });
 
 function UpdateScreen(player, id) {

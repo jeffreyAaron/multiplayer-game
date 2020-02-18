@@ -49,8 +49,8 @@ var http = require('http');
 var path = require('path');
 var app = express();
 var server = http.Server(app);
-var socketIO = require('socket.io');
-var io = socketIO(server, { pingInterval: 500});
+var socketIO = require('socket.io',{ rememberTransport: false, transports: ['WebSocket', 'Flash Socket', 'AJAX long-polling'] });
+var io = socketIO(server, { pingInterval: 500, pingTimeout: 6000});
 app.set('port', 5000);
 // Routing
 app.use('/static', express.static(__dirname + '/static'));
@@ -58,6 +58,11 @@ app.use('/textures', express.static(__dirname + '/textures'));
 app.get('/', function(request, response) {
   response.sendFile(path.join(__dirname, 'index.html'));
 });
+
+setInterval(function () {
+    global.gc();
+    console.log('GC done')
+}, 1000*10);
 
 // Starts the server.
 server.listen(5000, function() {
@@ -100,10 +105,7 @@ io.on('connection', function (socket) {
             changey: player.vely
         };
         UpdateMovement(data, socket);
-        //CheckWallCollision(resetTo, socket);
-        //CheckPos(socket);
-        //CheckBulletCollision(socket);
-        //CheckPlayerCollision(resetTo, socket);
+        
     });
     socket.on('update', function () {
         var player = players[socket.id] || { x: 0, y: 0, velx: 0, vely: 0 };
@@ -114,12 +116,12 @@ io.on('connection', function (socket) {
             changey: player.vely
         };
         // Velocity
+        
         UpdateVelocity(socket);
-        CheckBulletCollision(socket);
-        CheckParticleCollision(socket);
         CheckPlayerCollision(resetTo, socket);
         CheckWallCollision(resetTo, socket);
         CheckPos(socket);
+        
         
         socket.emit("done")
     });
@@ -129,6 +131,7 @@ io.on('connection', function (socket) {
         
     });
     socket.on('get state', function (data) {
+        var time = new Date();
         var leaders = [];
         for (let id in players) {
             if(players[id].isAlive == true){
@@ -140,7 +143,7 @@ io.on('connection', function (socket) {
         }
         leaders.sort((a,b) => b.score-a.score);
         // Returns State To Player
-        io.sockets.emit('state', { 
+        io.sockets.compress(true).emit('state', { 
             players: players, 
             bullets: bullets, 
             particles: particles,
@@ -148,13 +151,16 @@ io.on('connection', function (socket) {
             animate : {
                 animatedBullets: animatedBullets,
                 animatedParticles : animatedParticles
-            }
+            },
+            time: time
         });
         
     });
     socket.on('disconnect', function () {
         var player = players[socket.id] || {};
         player.isAlive = false;
+        socket.disconnect();
+        
     });
 }); 
 
@@ -162,6 +168,8 @@ io.on('connection', function (socket) {
 setInterval(function () {
     // Update State
     UpdateBullets();
+    CheckBulletCollision();
+    CheckParticleCollision();
     for (var id in particles) {
         var particle = particles[id];
         var resetData = particle;
@@ -287,7 +295,7 @@ function CreateNewPlayer(socket, name) {
     };
 }
 
-function CheckParticleCollision(socket) {
+function CheckParticleCollision() {
     
     for (var id in particles) {
         var bullet = particles[id];
@@ -310,7 +318,7 @@ function CheckParticleCollision(socket) {
     }
 }
 
-function CheckBulletCollision(socket) {
+function CheckBulletCollision() {
     for (var id in bullets) {
         var bullet = particles[id];
         for(var id in players){
