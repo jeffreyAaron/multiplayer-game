@@ -61,8 +61,9 @@ app.get('/', function(request, response) {
 
 
 // Starts the server.
-server.listen(5000, function() {
-  console.log('Starting server on port 5000');
+server.listen(process.env.PORT || 5000, function() {
+    console.log('Starting server on port ' + (process.env.PORT || 5000));
+    
 });
 
 // Add the WebSocket handlers
