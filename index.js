@@ -49,7 +49,7 @@ var http = require('http');
 var path = require('path');
 var app = express();
 var server = http.Server(app);
-var socketIO = require('socket.io',{ rememberTransport: false, transports: ['WebSocket', 'Flash Socket', 'AJAX long-polling'] });
+var socketIO = require('socket.io');
 var io = socketIO(server, { pingInterval: 500, pingTimeout: 6000});
 app.set('port', 5000);
 // Routing
@@ -59,10 +59,6 @@ app.get('/', function(request, response) {
   response.sendFile(path.join(__dirname, 'index.html'));
 });
 
-setInterval(function () {
-    global.gc();
-    console.log('GC done')
-}, 1000*10);
 
 // Starts the server.
 server.listen(5000, function() {
