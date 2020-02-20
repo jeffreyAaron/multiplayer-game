@@ -49,7 +49,7 @@ var http = require('http');
 var path = require('path');
 var app = express();
 var server = http.Server(app);
-var socketIO = require('socket.io');
+var socketIO = require('socket.io', { wsEngine: 'ws' });
 var io = socketIO(server, { pingInterval: 500, pingTimeout: 6000});
 app.set('port', 5000);
 // Routing
