@@ -62,7 +62,7 @@ var currentPlayer = {
     health: 100
 };
 
-var socket = io('http://192.168.0.4:5000');
+var socket = io();
 var movement = {
     rot: 0,
     up: false,
