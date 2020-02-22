@@ -110,7 +110,7 @@ document.addEventListener('keyup', function (event) {
 document.addEventListener("mousemove", function (event) {
     hasMoved = true;
     var angle = Math.atan2(event.pageX - canvasWidth / 2, - (event.pageY - canvasHeight / 2));
-    movement.rot = angle - 1.5708 * 2;
+    movement.rot = angle - 180 *Math.PI/180;
 });
 var lastClickTime = 0, nowTime;
 document.addEventListener("click", function (event) {
@@ -131,17 +131,26 @@ document.addEventListener("click", function (event) {
 
 function FireCannon() {
     if (!currentPlayer.isAlive) { return; }
-    var rot = movement.rot - 1.5708;
-    var changey = bulletMultiplier * Math.sin(rot);
-    var changex = bulletMultiplier * Math.cos(rot);
-    socket.emit('cannon', {
-        changex: changex,
-        changey: changey,
-        x: currentPlayer.x,
-        y: currentPlayer.y,
-        life: cannonLife,
-        playerId: playerId
-    });
+    var bulletsToFire = [];
+    if (Math.floor(currentPlayer.tankLevel) == 1) {
+        bulletsToFire.push(movement.rot - 90 * Math.PI / 180);
+    } else if (Math.floor(currentPlayer.tankLevel) >= 2){
+        bulletsToFire.push(movement.rot - 45 * Math.PI / 180);
+        bulletsToFire.push(movement.rot- 135 * Math.PI / 180);
+    }
+    for(var id in bulletsToFire){
+        var rot = bulletsToFire[id];
+        var changey = bulletMultiplier * Math.sin(rot);
+        var changex = bulletMultiplier * Math.cos(rot);
+        socket.emit('cannon', {
+            changex: changex,
+            changey: changey,
+            x: currentPlayer.x + (changex / bulletMultiplier) * cannonLength,
+            y: currentPlayer.y + (changey / bulletMultiplier) * cannonLength,
+            life: cannonLife,
+            playerId: playerId
+        });
+    }
 }
 
 socket.emit('new player', "Cookie" + Math.round(Math.random() * 100));
@@ -315,17 +324,34 @@ function DrawBackground(player) {
     }
 }
 function DrawWeapon(player, id) {
+    console.log(player.tankLevel);
     context.fillStyle = '#333';
     var ctx = context;
     ctx.save();
     if (id == playerId) {
-        ctx.translate(canvasWidth / 2, canvasHeight / 2);
-        ctx.rotate(player.rot);
-        ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+        if (Math.floor(player.tankLevel) == 1){
+            ctx.translate(canvasWidth / 2, canvasHeight / 2);
+            ctx.rotate(player.rot);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+        } else if (Math.floor(player.tankLevel) >= 2){
+            ctx.translate(canvasWidth / 2, canvasHeight / 2);
+            ctx.rotate(player.rot + (-45) * Math.PI / 180);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.rotate((90) * Math.PI / 180);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+        }
     } else {
-        ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
-        ctx.rotate(player.rot);
-        ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+        if (Math.floor(player.tankLevel) == 1) {
+            ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
+            ctx.rotate(player.rot);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+        } else if (Math.floor(player.tankLevel) >= 2) {
+            ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
+            ctx.rotate(player.rot - Math.PI + (-45) * 180 / Math.PI);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.rotate((90) * 180 / Math.PI);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+        }
     }
     ctx.restore();
 }

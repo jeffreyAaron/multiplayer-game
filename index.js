@@ -27,6 +27,7 @@ var particleSpeed = 0.3;
 var bulletAnimationSpeed = 0.08;
 var particleAnimationSpeed = 0.08;
 var latency = 0;
+var levelUpAmount = 3;
 
 // Land Configuration
 var map = [
@@ -116,6 +117,7 @@ io.on('connection', function (socket) {
         CheckPlayerCollision(resetTo, socket);
         CheckWallCollision(resetTo, socket);
         CheckPos(socket);
+        UpdatePlayerLevel(socket);
 
 
 
@@ -163,6 +165,7 @@ io.on('connection', function (socket) {
 setInterval(function () {
     // Update State
     UpdateBullets();
+    SetupParticles(particlesCount - particles.length);
     for (var id in particles) {
         var particle = particles[id];
         var resetData = particle;
@@ -273,7 +276,8 @@ function CreateNewPlayer(socket, name) {
         y: ypos,
         health: 100,
         score: 0,
-        name: name
+        name: name,
+        tankLevel : 1.0,
     };
 }
 
@@ -338,6 +342,7 @@ function CheckParticleBulletCollision(particle) {
             animatedParticles.push(particle);
             particles.splice(particles.indexOf(particle), 1);
             bullets.splice(bullets.indexOf(bullet), 1);
+            players[bullet.playerId].score ++;
         }
 
     }
@@ -359,6 +364,11 @@ function CheckParticleParticleCollision(particle) {
 
     }
 
+}
+
+function UpdatePlayerLevel (socket) {
+    var player = players[socket.id] || {score : 0, tankLevel : 0};
+    player.tankLevel = player.score * 1.0 / levelUpAmount + 1;
 }
 
 function CheckPlayerCollision(resetData, socket) {
@@ -467,11 +477,8 @@ function CheckBulletWallCollision() {
 }
 
 function CannonLaunch(data, socket) {
-    var rot = players[socket.id].rot - 1.5708;
-    var changey = bulletMultiplier * Math.sin(rot);
-    var changex = bulletMultiplier * Math.cos(rot);
-    data.x = players[socket.id].x + (changex / bulletMultiplier) * cannonLength || 0;
-    data.y = players[socket.id].y + (changey / bulletMultiplier) * cannonLength || 0;
+    var changey = data.changey;
+    var changex = data.changex;
     data.opacity = 1;
     players[socket.id].velx -= changex / bulletMultiplier / 2;
     players[socket.id].vely -= changey / bulletMultiplier / 2;
