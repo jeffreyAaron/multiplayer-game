@@ -51,19 +51,19 @@ var app = express();
 var server = http.createServer(app);
 var socketIO = require('socket.io')(server, { wsEngine: 'ws' });
 var io = socketIO;
-app.set('port', 5000);
+app.set('port', process.env.PORT || 5000);
 // Routing
 app.use('/static', express.static(__dirname + '/static'));
 app.use('/textures', express.static(__dirname + '/textures'));
-app.get('/', function(request, response) {
-  response.sendFile(path.join(__dirname, 'index.html'));
+app.get('/', function (request, response) {
+    response.sendFile(path.join(__dirname, 'index.html'));
 });
 
 
 // Starts the server.
-server.listen(process.env.PORT || 5000, function() {
+server.listen(process.env.PORT || 5000, function () {
     console.log('Starting server on port ' + (process.env.PORT || 5000));
-    
+
 });
 
 
@@ -84,11 +84,11 @@ function init() {
 }
 io.on('connection', function (socket) {
     socket.on('late', function (ms) {
-        latency = ms/(1000/60);
+        latency = ms / (1000 / 60);
     });
     socket.on('new player', function (name) {
         CreateNewPlayer(socket, name);
-        
+
         socket.emit("get id from server", socket.id);
     });
     socket.on('movement', function (data) {
@@ -100,7 +100,7 @@ io.on('connection', function (socket) {
             changey: player.vely
         };
         UpdateMovement(data, socket);
-        
+
     });
     socket.on('update', function () {
         var player = players[socket.id] || { x: 0, y: 0, velx: 0, vely: 0 };
@@ -111,60 +111,58 @@ io.on('connection', function (socket) {
             changey: player.vely
         };
         // Velocity
-        
+
         UpdateVelocity(socket);
         CheckPlayerCollision(resetTo, socket);
         CheckWallCollision(resetTo, socket);
         CheckPos(socket);
-        
-        
-        socket.emit("done")
+
+
+
     });
     socket.on('cannon', function (data) {
         // CannonLaunch
         CannonLaunch(data, socket);
-        
+
     });
     socket.on('get state', function (data) {
         var time = new Date();
         var leaders = [];
         for (let id in players) {
-            if(players[id].isAlive == true){
+            if (players[id].isAlive == true) {
                 var newLeader = players[id];
                 newLeader.id = id;
                 leaders.push(newLeader)
             }
-            
+
         }
-        leaders.sort((a,b) => b.score-a.score);
+        leaders.sort((a, b) => b.score - a.score);
         // Returns State To Player
-        io.sockets.compress(true).emit('state', { 
-            players: players, 
-            bullets: bullets, 
+        io.sockets.compress(true).emit('state', {
+            players: players,
+            bullets: bullets,
             particles: particles,
             leaderboard: leaders,
-            animate : {
+            animate: {
                 animatedBullets: animatedBullets,
-                animatedParticles : animatedParticles
+                animatedParticles: animatedParticles
             },
             time: time
         });
-        
+
     });
     socket.on('disconnect', function () {
         var player = players[socket.id] || {};
         player.isAlive = false;
         socket.disconnect();
-        
+
     });
-}); 
+});
 
 // Low Priority
 setInterval(function () {
     // Update State
     UpdateBullets();
-    CheckBulletCollision();
-    CheckParticleCollision();
     for (var id in particles) {
         var particle = particles[id];
         var resetData = particle;
@@ -179,13 +177,18 @@ setInterval(function () {
     Animate();
 }, 1000 / 30);
 
+setInterval(function () {
+    CheckBulletCollision();
+    CheckParticleCollision();
+}, 1000 / 60);
 
-function Animate(){
+
+function Animate() {
     for (var id in animatedBullets) {
         var bullet = animatedBullets[id];
         bullet.opacity -= bulletAnimationSpeed;
-        if (bullet.opacity<0) {
-            animatedBullets.splice(animatedBullets.indexOf(bullet),1);
+        if (bullet.opacity < 0) {
+            animatedBullets.splice(animatedBullets.indexOf(bullet), 1);
         }
     }
     for (var id in animatedParticles) {
@@ -229,18 +232,18 @@ function SetupParticles(count) {
             vely: Math.random() > 0.5 ? Math.random() * particleSpeed : -Math.random() * particleSpeed,
             velx: Math.random() > 0.5 ? Math.random() * particleSpeed : -Math.random() * particleSpeed,
             type: Math.round(Math.random() * 2),
-            opacity:1
+            opacity: 1
         };
         particles.push(particle);
     }
-    
+
 
 }
 function CreateNewPlayer(socket, name) {
     var xpos, ypos;
     var foundGood = false;
     while (!foundGood) {
-        
+
         xpos = -Math.random() * landWidth;
         ypos = -Math.random() * landHeight;
         foundGood = true;
@@ -251,10 +254,10 @@ function CreateNewPlayer(socket, name) {
                     var blocky = Yindex * tileSize;
                     var playerx = -xpos;
                     var playery = -ypos;
-                    
+
                     if (playerx >= blockx && playerx <= blockx + tileSize && playery >= blocky && playery <= blocky + tileSize) {
                         foundGood = false;
-                        
+
                     }
                 }
             }
@@ -275,7 +278,7 @@ function CreateNewPlayer(socket, name) {
 }
 
 function CheckParticleCollision() {
-    
+
     for (var id in particles) {
         var bullet = particles[id];
         for (var id in players) {
@@ -298,16 +301,17 @@ function CheckParticleCollision() {
 }
 
 function CheckBulletCollision() {
+
     for (var id in bullets) {
-        var bullet = particles[id];
-        for(var id in players){
+        var bullet = bullets[id];
+        for (var id in players) {
             var testOn = players[id];
-            if(id == bullet.playerId){continue;}
+            if (id == bullet.playerId) { continue; }
             if (!testOn.isAlive) { continue; }
             var distx = Math.pow(Math.abs(testOn.x - bullet.x), 2);
             var disty = Math.pow(Math.abs(testOn.y - bullet.y), 2);
-            var totalDist = Math.sqrt(distx+disty);
-            if(totalDist<(playerRadius+cannonWidth)/2){
+            var totalDist = Math.sqrt(distx + disty);
+            if (totalDist < (playerRadius + cannonWidth) / 2) {
                 players[id].health -= bulletHealthLoss;
                 if (players[id].health <= 0) {
                     players[id].isAlive = false;
@@ -317,25 +321,25 @@ function CheckBulletCollision() {
                 bullets.splice(bullets.indexOf(bullet), 1);
             }
         }
-        }
+    }
 }
 
 function CheckParticleBulletCollision(particle) {
     var deletelist = [];
     for (var id in bullets) {
         var bullet = bullets[id];
-        
-            var testOn = particle
-            var distx = Math.pow(Math.abs(testOn.x - bullet.x), 2);
-            var disty = Math.pow(Math.abs(testOn.y - bullet.y), 2);
-            var totalDist = Math.sqrt(distx + disty);
-            if (totalDist < (playerRadius + cannonWidth) / 2) {
-                animatedBullets.push(bullet);
-                animatedParticles.push(particle);
-                particles.splice(particles.indexOf(particle), 1);
-                bullets.splice(bullets.indexOf(bullet), 1);
-            }
-      
+
+        var testOn = particle
+        var distx = Math.pow(Math.abs(testOn.x - bullet.x), 2);
+        var disty = Math.pow(Math.abs(testOn.y - bullet.y), 2);
+        var totalDist = Math.sqrt(distx + disty);
+        if (totalDist < (playerRadius + cannonWidth) / 2) {
+            animatedBullets.push(bullet);
+            animatedParticles.push(particle);
+            particles.splice(particles.indexOf(particle), 1);
+            bullets.splice(bullets.indexOf(bullet), 1);
+        }
+
     }
 }
 
@@ -348,11 +352,11 @@ function CheckParticleParticleCollision(particle) {
         var distx = Math.pow(Math.abs(testOn.x - testER.x), 2);
         var disty = Math.pow(Math.abs(testOn.y - testER.y), 2);
         var totalDist = Math.sqrt(distx + disty);
-        if (totalDist < (playerRadius + playerRadius*3)) {
+        if (totalDist < (playerRadius + playerRadius * 3)) {
             particle.velx = -particle.velx;
             particle.vely = -particle.vely;
         }
-        
+
     }
 
 }
@@ -360,64 +364,64 @@ function CheckParticleParticleCollision(particle) {
 function CheckPlayerCollision(resetData, socket) {
     var deletelist = [];
     var id = socket.id;
-        var testER = players[id];
+    var testER = players[id];
     if (testER == undefined) { return; }
-        if (!testER.isAlive) { return; }
-        for (var idTest in players) {
-            var testOn = players[idTest];
-            if (idTest == id) { continue; }
-            if (!testOn.isAlive) { continue; }
-            var distx = Math.pow(Math.abs(testOn.x - testER.x), 2);
-            var disty = Math.pow(Math.abs(testOn.y - testER.y), 2);
-            var totalDist = Math.sqrt(distx + disty);
-            if (totalDist < (playerRadius + playerRadius)) {
-                players[id].health -= playerHealthLoss;
-                players[idTest].health -= playerHealthLoss;
-                if (players[id].health<=0) {
-                    players[id].isAlive = false;
-                    players[id].health = 0;
-                }
-                if (players[idTest].health <= 0) {
-                    players[idTest].isAlive = false;
-                    players[idTest].health = 0;
-                }
+    if (!testER.isAlive) { return; }
+    for (var idTest in players) {
+        var testOn = players[idTest];
+        if (idTest == id) { continue; }
+        if (!testOn.isAlive) { continue; }
+        var distx = Math.pow(Math.abs(testOn.x - testER.x), 2);
+        var disty = Math.pow(Math.abs(testOn.y - testER.y), 2);
+        var totalDist = Math.sqrt(distx + disty);
+        if (totalDist < (playerRadius + playerRadius)) {
+            players[id].health -= playerHealthLoss;
+            players[idTest].health -= playerHealthLoss;
+            if (players[id].health <= 0) {
+                players[id].isAlive = false;
+                players[id].health = 0;
             }
-            if (totalDist < (playerRadius + playerRadius)/2) {
-                players[id].health -= playerHealthLoss; players[id].x = resetData.x;
-                players[id].y = resetData.y;
-                players[id].velx = 0;
-                players[id].vely = 0;
-                
+            if (players[idTest].health <= 0) {
+                players[idTest].isAlive = false;
+                players[idTest].health = 0;
             }
         }
-    
+        if (totalDist < (playerRadius + playerRadius) / 2) {
+            players[id].health -= playerHealthLoss; players[id].x = resetData.x;
+            players[id].y = resetData.y;
+            players[id].velx = 0;
+            players[id].vely = 0;
+
+        }
+    }
+
 }
 
 function CheckParticleWallCollision(particle, resetData) {
-    
-        for (let Yindex = 0; Yindex < landHeight / tileSize; Yindex++) {
-            for (let Xindex = 0; Xindex < landWidth / tileSize; Xindex++) {
-                if (map[Yindex][Xindex] == 1) {
-                    var blockx = Xindex * tileSize;
-                    var blocky = Yindex * tileSize;
-                    var playerx = -particle.x;
-                    var playery = -particle.y;
-                    //console.log("B " +blockx + "  " +blocky);
-                    //console.log(playerx + "  " + playery);
-                    if (playerx >= blockx && playerx <= blockx + tileSize && playery >= blocky && playery <= blocky + tileSize) {
-                        particle.velx = -particle.velx;
-                        particle.vely = -particle.vely;
-                        particle.x = resetData.x;
-                        particle.y = resetData.y;
-                        
-                    }
+
+    for (let Yindex = 0; Yindex < landHeight / tileSize; Yindex++) {
+        for (let Xindex = 0; Xindex < landWidth / tileSize; Xindex++) {
+            if (map[Yindex][Xindex] == 1) {
+                var blockx = Xindex * tileSize;
+                var blocky = Yindex * tileSize;
+                var playerx = -particle.x;
+                var playery = -particle.y;
+                //console.log("B " +blockx + "  " +blocky);
+                //console.log(playerx + "  " + playery);
+                if (playerx >= blockx && playerx <= blockx + tileSize && playery >= blocky && playery <= blocky + tileSize) {
+                    particle.velx = -particle.velx;
+                    particle.vely = -particle.vely;
+                    particle.x = resetData.x;
+                    particle.y = resetData.y;
+
                 }
             }
         }
+    }
 }
 
 function CheckWallCollision(resetData, socket) {
-    var playerTestOn = players[socket.id] || {x:0, y:0, velx: 0, vely: 0};
+    var playerTestOn = players[socket.id] || { x: 0, y: 0, velx: 0, vely: 0 };
     for (let Yindex = 0; Yindex < landHeight / tileSize; Yindex++) {
         for (let Xindex = 0; Xindex < landWidth / tileSize; Xindex++) {
             if (map[Yindex][Xindex] == 1) {
@@ -427,12 +431,12 @@ function CheckWallCollision(resetData, socket) {
                 var playery = -playerTestOn.y;
                 //console.log("B " +blockx + "  " +blocky);
                 //console.log(playerx + "  " + playery);
-                if(playerx >= blockx && playerx <= blockx + tileSize && playery >= blocky && playery <= blocky + tileSize){
+                if (playerx >= blockx && playerx <= blockx + tileSize && playery >= blocky && playery <= blocky + tileSize) {
                     players[socket.id].x = resetData.x;
                     players[socket.id].y = resetData.y;
                     players[socket.id].velx = 0;
                     players[socket.id].vely = 0;
-                    
+
                 }
             }
         }
@@ -440,7 +444,7 @@ function CheckWallCollision(resetData, socket) {
 }
 
 function CheckBulletWallCollision() {
-    for(var id in bullets){
+    for (var id in bullets) {
         var bullet = bullets[id];
         for (let Yindex = 0; Yindex < landHeight / tileSize; Yindex++) {
             for (let Xindex = 0; Xindex < landWidth / tileSize; Xindex++) {
@@ -454,7 +458,7 @@ function CheckBulletWallCollision() {
                     if (playerx >= blockx && playerx <= blockx + tileSize && playery >= blocky && playery <= blocky + tileSize) {
                         animatedBullets.push(bullet);
                         bullets.splice(bullets.indexOf(bullet), 1);
-                        
+
                     }
                 }
             }
@@ -467,7 +471,7 @@ function CannonLaunch(data, socket) {
     var changey = bulletMultiplier * Math.sin(rot);
     var changex = bulletMultiplier * Math.cos(rot);
     data.x = players[socket.id].x + (changex / bulletMultiplier) * cannonLength || 0;
-    data.y = players[socket.id].y + (changey / bulletMultiplier) * cannonLength|| 0;
+    data.y = players[socket.id].y + (changey / bulletMultiplier) * cannonLength || 0;
     data.opacity = 1;
     players[socket.id].velx -= changex / bulletMultiplier / 2;
     players[socket.id].vely -= changey / bulletMultiplier / 2;
@@ -481,8 +485,8 @@ function UpdateBullets() {
         bullet.x += bullet.changex;
         bullet.y += bullet.changey;
         bullet.life--;
-        if(bullet.life < 0){
-            bullet.life=0;
+        if (bullet.life < 0) {
+            bullet.life = 0;
             deletelist.push(bullet);
         }
     }
@@ -493,8 +497,8 @@ function UpdateBullets() {
     }
 }
 
-function CheckPos(socket){
-    var player = players[socket.id] || {x:0, y:0};
+function CheckPos(socket) {
+    var player = players[socket.id] || { x: 0, y: 0 };
     if (player.x > 0) {
         player.x = 0;
     }
@@ -536,8 +540,8 @@ function UpdateVelocity(socket) {
     var player = players[socket.id] || {};
     player.velx = player.velx * friction;
     player.vely = player.vely * friction;
-    player.x += player.velx ;
-    player.y += player.vely ;
+    player.x += player.velx;
+    player.y += player.vely;
 }
 
 function UpdateParticleVelocity(particle) {
@@ -545,7 +549,7 @@ function UpdateParticleVelocity(particle) {
     particle.vely = particle.vely;
     particle.x += particle.velx;
     particle.y += particle.vely;
-    
+
 }
 
 function UpdateMovement(data, socket) {
