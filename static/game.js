@@ -62,7 +62,7 @@ var currentPlayer = {
     health: 100
 };
 
-var socket = io('https://mlti-plyer-gme.herokuapp.com/', { forceNew: true });
+var socket = io('http://localhost:5000', { forceNew: true });
 var movement = {
     rot: 0,
     up: false,
