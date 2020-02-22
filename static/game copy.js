@@ -62,7 +62,7 @@ var currentPlayer = {
     health: 100
 };
 
-var socket = io('http://localhost:5000/', { forceNew: true });
+var socket = io('https://mlti-plyer-gme.herokuapp.com/', { forceNew: true });
 var movement = {
     rot: 0,
     up: false,
@@ -148,13 +148,13 @@ socket.emit('new player', "Cookie" + Math.round(Math.random()*100));
 socket.on("get id from server", function (id) {
     playerId = id;
 });
-socket.emit('update');
+
 
 var hasMoved = false;
 setInterval(function () {
-    if(currentPlayer.isAlive && hasMoved){
+    if(currentPlayer.isAlive){
         socket.emit('movement', movement);
-        hasMoved = false;
+        
     }
     
     
@@ -202,15 +202,13 @@ canvasHeight = document.body.scrollHeight;
 
 var context = canvas.getContext('2d');
 
-socket.on('done', function(){
-    
-    
-    var time = end();
-    console.log("new frame");
+setInterval(() => {
+    socket.emit("update");
     socket.emit("get state");
     onScreenContext.drawImage(canvas, 0, 0);
+}, 1000/60);
    
-})
+
 var leaderBoardTick = 0;
 var skippedFrames = 0;
 socket.on('state', function (data) {

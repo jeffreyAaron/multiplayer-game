@@ -51,7 +51,7 @@ var app = express();
 var server = http.createServer(app);
 var socketIO = require('socket.io')(server, { wsEngine: 'ws' });
 var io = socketIO;
-app.set('port', 5000);
+app.set('port', process.env.PORT || 5000);
 // Routing
 app.use('/static', express.static(__dirname + '/static'));
 app.use('/textures', express.static(__dirname + '/textures'));
@@ -118,7 +118,7 @@ io.on('connection', function (socket) {
         CheckPos(socket);
         
         
-        socket.emit("done")
+        
     });
     socket.on('cannon', function (data) {
         // CannonLaunch
@@ -163,8 +163,6 @@ io.on('connection', function (socket) {
 setInterval(function () {
     // Update State
     UpdateBullets();
-    CheckBulletCollision();
-    CheckParticleCollision();
     for (var id in particles) {
         var particle = particles[id];
         var resetData = particle;
@@ -178,6 +176,11 @@ setInterval(function () {
     // Animation
     Animate();
 }, 1000 / 30);
+
+setInterval(function () {
+    CheckBulletCollision();
+    CheckParticleCollision();
+}, 1000 / 60);
 
 
 function Animate(){
@@ -298,8 +301,9 @@ function CheckParticleCollision() {
 }
 
 function CheckBulletCollision() {
+    
     for (var id in bullets) {
-        var bullet = particles[id];
+        var bullet = bullets[id];
         for(var id in players){
             var testOn = players[id];
             if(id == bullet.playerId){continue;}
