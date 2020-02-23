@@ -32,6 +32,7 @@ var powerupoff = 0;
 var showpowerups = true;
 var img;
 var onScreenContext;
+var started = false;
 
 window.onload = function () {
     img = document.getElementById("backgroundTile");
@@ -200,14 +201,26 @@ function FireCannon() {
     }
 }
 
-socket.emit('new player', "Cookie" + Math.round(Math.random() * 100));
+var text = document.getElementById("nameBox");
+var textDiv = document.getElementById("nameDiv");
+var textBtn = document.getElementById("nameBtn");
+
+function StartGame (){
+    
+    socket.emit('new player', text.value);
+    textDiv.style.display = "none";
+    
+}
+
 socket.on("get id from server", function (id) {
     playerId = id;
+    started = true;
 });
 
 
 var hasMoved = false;
 setInterval(function () {
+    if (!started) { return; }
     if (currentPlayer.isAlive) {
         socket.emit('movement', movement);
 
@@ -217,7 +230,8 @@ setInterval(function () {
 // Auto Fire
 AutoFire();
 function AutoFire() {
-    if (autofire) {
+    
+    if (autofire && started) {
         FireCannon();
     }
     setTimeout(AutoFire, bulletFireTime - (currentPlayer.reload * (bulletFireTime/2) / 8));
@@ -283,6 +297,7 @@ setInterval(() => {
 var leaderBoardTick = 0;
 var skippedFrames = 0;
 socket.on('state', function (data) {
+    if(!started){return;}
     currentPlayer = data.players[playerId] || { x: 0, y: 0 };
     if (Math.floor(currentPlayer.tankLevel) != Math.floor(oldLevel)){
         points += Math.round(Math.abs(currentPlayer.tankLevel-oldLevel)*pointsPerLevel);
@@ -531,7 +546,7 @@ function DrawPlayer(player, id) {
     ctx.lineTo(canvasWidth / 2 + currentPlayer.x - player.x - healthBarLength / 2 + healthBarLength, canvasHeight / 2 + currentPlayer.y - player.y + healthBarOffset);
     ctx.stroke();
     ctx.beginPath();
-    context.strokeStyle = '#111';
+    context.strokeStyle = '#fccd56';
     context.lineWidth = 6;
     ctx.moveTo(canvasWidth / 2 + currentPlayer.x - player.x - healthBarLength / 2, canvasHeight / 2 + currentPlayer.y - player.y + healthBarOffset);
     ctx.lineTo(canvasWidth / 2 + currentPlayer.x - player.x - healthBarLength / 2 + healthBarLength * (player.health / 100), canvasHeight / 2 + currentPlayer.y - player.y + healthBarOffset);
