@@ -121,7 +121,7 @@ document.addEventListener("click", function (event) {
     nowTime = new Date();
     var elaspedTime = nowTime.getTime() - lastClickTime;
     console.log(elaspedTime < bulletFireTime);
-    if (elaspedTime > bulletFireTime) {
+    if (elaspedTime > bulletFireTime * currentPlayer.reload) {
         console.log("good");
         if (!autofire) {
             FireCannon();
