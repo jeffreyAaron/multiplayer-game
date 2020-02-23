@@ -27,7 +27,7 @@ var particleSpeed = 0.3;
 var bulletAnimationSpeed = 0.08;
 var particleAnimationSpeed = 0.08;
 var latency = 0;
-var levelUpAmount = 3;
+var levelUpAmount = 20;
 
 // Land Configuration
 var map = [

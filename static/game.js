@@ -23,8 +23,12 @@ var particleSize = 30;
 var particleHealthGain = 5;
 var particlesCount = 200;
 var leaderBoardCount = 10;
+var levelBarLength = 600;
+var level = 1;
+var levelIncreaseGrain = 10;
 var img;
-var onScreenContext
+var onScreenContext;
+
 window.onload = function () {
     img = document.getElementById("backgroundTile");
     onScreenContext = document.getElementById('screen').getContext('2d');
@@ -214,7 +218,9 @@ var context = canvas.getContext('2d');
 setInterval(() => {
     socket.emit("update");
     socket.emit("get state");
-    onScreenContext.drawImage(canvas, 0, 0);
+    if(canvas!=undefined){
+        onScreenContext.drawImage(canvas, 0, 0);
+    }
 }, 1000 / 60);
 
 
@@ -267,6 +273,7 @@ socket.on('state', function (data) {
             var leaders = data.leaderboard.slice(0, leaderBoardCount);
             DrawLeaderBoard(leaders);
         }
+        DrawLevel();
     }
     else {
         ShowGameOverScreenAnim();
@@ -280,6 +287,34 @@ socket.on('state', function (data) {
 function UpdateScreen(player, id) {
     DrawWeapon(player, id);
     DrawPlayer(player, id);
+}
+
+function DrawLevel(){
+    var ctx = context;
+    var playerLevel = currentPlayer.tankLevel;
+    var offset = playerLevel-level;
+    level += offset/levelIncreaseGrain;
+    var levelCalc = (1 - (level - ~~level));
+
+    var diff = Math.abs(offset);
+
+    if (diff < 0.001) {
+        level = playerLevel;
+    }
+    // Level Bar
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    context.strokeStyle = '#666';
+ 
+    ctx.moveTo(canvasWidth / 2 - levelBarLength / 2, 0);
+    ctx.lineTo(canvasWidth / 2 + levelBarLength / 2, 0);
+    ctx.stroke();
+    ctx.beginPath();
+    context.strokeStyle = '#fccd56';
+    
+    ctx.moveTo(canvasWidth / 2 - levelBarLength / 2, 0);
+    ctx.lineTo(canvasWidth / 2 + levelBarLength / 2 - levelBarLength * levelCalc, 0);
+    ctx.stroke();
 }
 
 function inRange(testEr) {
