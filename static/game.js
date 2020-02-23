@@ -315,6 +315,9 @@ function DrawLevel(){
     ctx.moveTo(canvasWidth / 2 - levelBarLength / 2, 0);
     ctx.lineTo(canvasWidth / 2 + levelBarLength / 2 - levelBarLength * levelCalc, 0);
     ctx.stroke();
+
+    ctx.font = "30px Segoe UI";
+    ctx.fillText("Level: " + ~~level , 10, 30);
 }
 
 function inRange(testEr) {
