@@ -27,7 +27,7 @@ var particleSpeed = 0.3;
 var bulletAnimationSpeed = 0.08;
 var particleAnimationSpeed = 0.08;
 var latency = 0;
-var levelUpAmount = 20;
+var levelUpAmount = 1;
 
 // Land Configuration
 var map = [
@@ -151,6 +151,32 @@ io.on('connection', function (socket) {
             },
             time: time
         });
+
+    });
+    socket.on('add to bulletDamage', function () {
+        var player = players[socket.id] || {};
+        player.bulletDamage += 1;
+
+    });
+    socket.on('add to bulletPenetration', function () {
+        var player = players[socket.id] || {};
+        player.bulletPenetration += 1;
+
+    });
+    socket.on('add to bulletSpeed', function () {
+        var player = players[socket.id] || {};
+        player.bulletSpeed += 1;
+
+    });
+    socket.on('add to reload', function () {
+        var player = players[socket.id] || {};
+        player.reload += 1;
+
+    });
+    socket.on('add to movementSpeed', function () {
+        var player = players[socket.id] || {};
+        console.log(player.movementSpeed);
+        player.movementSpeed += 1;
 
     });
     socket.on('disconnect', function () {
@@ -278,11 +304,11 @@ function CreateNewPlayer(socket, name) {
         score: 0,
         name: name,
         tankLevel : 1.0,
-        bulletDamage:2, //
-        bulletPenetration:2, //
-        bulletSpeed:2,//
-        reload: 1,//
-        movementSpeed:2//
+        bulletDamage: 0, 
+        bulletPenetration: 0,
+        bulletSpeed:0,
+        reload: 0,
+        movementSpeed:0
         
     };
 }
@@ -322,8 +348,8 @@ function CheckBulletCollision() {
             var disty = Math.pow(Math.abs(testOn.y - bullet.y), 2);
             var totalDist = Math.sqrt(distx + disty);
             if (totalDist < (playerRadius + cannonWidth) / 2) {
-                players[bullet.playerId].bulletDamage
-                players[id].health -= bulletHealthLoss * (players[bullet.playerId] || {bulletDamage:1}).bulletDamage;
+                
+                players[id].health -= bulletHealthLoss + ((players[bullet.playerId] || { bulletDamage: 1 }).bulletDamage)/8 * bulletHealthLoss;
                 if (players[id].health <= 0) {
                     players[id].isAlive = false;
                     players[id].health = 0;
@@ -487,9 +513,9 @@ function CannonLaunch(data, socket) {
     var changey = data.changey;
     var changex = data.changex;
     data.opacity = 1;
-    data.life = cannonLife * (players[socket.playerId] || { bulletPenetration:1}).bulletPenetration;
-    (players[socket.id] || {velx:1}).velx -= changex / bulletMultiplier * (players[socket.playerId] || { bulletSpeed: 1 }).bulletSpeed / 2;
-    (players[socket.id] || { vely: 1 }).vely -= changey / bulletMultiplier * (players[socket.playerId] || { bulletSpeed: 1 }).bulletSpeed / 2;
+    data.life = cannonLife + ((players[socket.playerId] || { bulletPenetration: 1 }).bulletPenetration /8) * cannonLife;
+    (players[socket.id] || {velx:1}).velx -= changex / (bulletMultiplier + ((players[socket.playerId] || { bulletSpeed: 1 }).bulletSpeed)/8 * bulletMultiplier) / 2;
+    (players[socket.id] || { vely: 1 }).vely -= changey / (bulletMultiplier + ((players[socket.playerId] || { bulletSpeed: 1 }).bulletSpeed) / 8 * bulletMultiplier) / 2;
     bullets.push(data);
 }
 
@@ -570,20 +596,20 @@ function UpdateParticleVelocity(particle) {
 function UpdateMovement(data, socket) {
     var player = players[socket.id] || {};
     if (data.left) {
-        player.x += playerMoveSpeed * latency * player.movementSpeed;
-        player.velx += playerInitVelocity * player.movementSpeed;
+        player.x += playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency/8);
+        player.velx += playerInitVelocity ;
     }
     if (data.up) {
-        player.y += playerMoveSpeed * latency * player.movementSpeed;
-        player.vely += playerInitVelocity * player.movementSpeed;
+        player.y += playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
+        player.vely += playerInitVelocity ;
     }
     if (data.right) {
-        player.x -= playerMoveSpeed * latency * player.movementSpeed;
-        player.velx -= playerInitVelocity * player.movementSpeed;
+        player.x -= playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
+        player.velx -= playerInitVelocity ;
     }
     if (data.down) {
-        player.y -= playerMoveSpeed * latency * player.movementSpeed;
-        player.vely -= playerInitVelocity * player.movementSpeed;
+        player.y -= playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
+        player.vely -= playerInitVelocity ;
     }
     player.rot = data.rot;
 }

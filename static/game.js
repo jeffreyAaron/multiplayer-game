@@ -11,7 +11,7 @@ var cannonWidth = 20;
 var cannonLength = 40;
 var cannonLife = 500;
 var bulletMultiplier = 5;
-var bulletFireTime = 500;
+var bulletFireTime = 1000;
 var playerMoveSpeed = 0;
 var playerInitVelocity = 0.5;
 var friction = 0.9;
@@ -25,7 +25,9 @@ var particlesCount = 200;
 var leaderBoardCount = 10;
 var levelBarLength = 600;
 var level = 1;
+var oldLevel = 1;
 var levelIncreaseGrain = 10;
+var pointsPerLevel = 3;
 var img;
 var onScreenContext;
 
@@ -56,6 +58,7 @@ var map = [
 // Player Specific Constants
 var autofire = false;
 var playerId = "";
+var points = 1000;
 var currentPlayer = {
     rot: 0,
     isAlive: true,
@@ -109,6 +112,36 @@ document.addEventListener('keyup', function (event) {
         case 69: // E
             autofire = !autofire;
             break;
+        case 49: // 1
+            if(points > 0){
+                socket.emit("add to bulletDamage");
+                points--;
+            }
+            break;
+        case 50: // 2
+            if (points > 0) {
+            socket.emit("add to bulletPenetration");
+                points--;
+            }
+            break;
+        case 51: // 3
+            if (points > 0) {
+            socket.emit("add to bulletSpeed");
+                points--;
+            }
+            break;
+        case 52: // 4
+            if (points > 0) {
+            socket.emit("add to reload");
+                points--;
+            }
+            break;
+        case 53: // 5
+            if (points > 0) {
+            socket.emit("add to movementSpeed");
+                points--;
+            }
+            break;
     }
 });
 document.addEventListener("mousemove", function (event) {
@@ -121,7 +154,7 @@ document.addEventListener("click", function (event) {
     nowTime = new Date();
     var elaspedTime = nowTime.getTime() - lastClickTime;
     console.log(elaspedTime < bulletFireTime);
-    if (elaspedTime > bulletFireTime * currentPlayer.reload) {
+    if (elaspedTime > bulletFireTime - (currentPlayer.reload * (bulletFireTime / 2) / 8)) {
         console.log("good");
         if (!autofire) {
             FireCannon();
@@ -169,8 +202,6 @@ setInterval(function () {
         socket.emit('movement', movement);
 
     }
-
-
 }, 1000 / 60);
 
 // Auto Fire
@@ -179,7 +210,7 @@ function AutoFire() {
     if (autofire) {
         FireCannon();
     }
-    setTimeout(AutoFire, bulletFireTime * currentPlayer.reload);
+    setTimeout(AutoFire, bulletFireTime - (currentPlayer.reload * (bulletFireTime/2) / 8));
 }
 var latency = 0;
 socket.on('pong', function (ms) {
@@ -229,7 +260,11 @@ setInterval(() => {
 var leaderBoardTick = 0;
 var skippedFrames = 0;
 socket.on('state', function (data) {
-
+    currentPlayer = data.players[playerId] || { x: 0, y: 0 };
+    if(currentPlayer.tankLevel != oldLevel){
+        points += Math.abs(currentPlayer.tankLevel-oldLevel)*pointsPerLevel;
+        oldLevel = currentPlayer.tankLevel;
+    }
     console.log(new Date() - new Date(data.time));
     start();
     if (data.players[playerId] == undefined) { return; }
@@ -246,7 +281,6 @@ socket.on('state', function (data) {
         context.fillStyle = '#dbdbdb';
         context.fillRect(0, 0, canvasWidth, canvasHeight);
         context.fillStyle = 'green';
-        currentPlayer = data.players[playerId] || { x: 0, y: 0 };
         DrawBackground(currentPlayer);
         for (var id in data.bullets) {
             var bullet = data.bullets[id];
