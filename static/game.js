@@ -25,7 +25,7 @@ var particlesCount = 200;
 var leaderBoardCount = 10;
 var img;
 var onScreenContext
-window.onload = function (){
+window.onload = function () {
     img = document.getElementById("backgroundTile");
     onScreenContext = document.getElementById('screen').getContext('2d');
     onScreenContext.imageSmoothingEnabled = false
@@ -62,7 +62,7 @@ var currentPlayer = {
     health: 100
 };
 
-var socket = io('http://localhost:5000/', { forceNew: true });
+var socket = io('http://localhost:5000', { forceNew: true });
 var movement = {
     rot: 0,
     up: false,
@@ -109,28 +109,28 @@ document.addEventListener('keyup', function (event) {
 });
 document.addEventListener("mousemove", function (event) {
     hasMoved = true;
-    var angle = Math.atan2(event.pageX - canvasWidth/2, - (event.pageY - canvasHeight/2));
-    movement.rot = angle - 1.5708*2;
+    var angle = Math.atan2(event.pageX - canvasWidth / 2, - (event.pageY - canvasHeight / 2));
+    movement.rot = angle - 1.5708 * 2;
 });
 var lastClickTime = 0, nowTime;
 document.addEventListener("click", function (event) {
     nowTime = new Date();
     var elaspedTime = nowTime.getTime() - lastClickTime;
-    console.log(elaspedTime<bulletFireTime);
-    if (elaspedTime>bulletFireTime){
+    console.log(elaspedTime < bulletFireTime);
+    if (elaspedTime > bulletFireTime) {
         console.log("good");
-        if(!autofire){
+        if (!autofire) {
             FireCannon();
             lastClickTime = nowTime.getTime();
             console.log(nowTime.getTime());
-            
+
         }
     }
 });
 
 
 function FireCannon() {
-    if (!currentPlayer.isAlive) { return;}
+    if (!currentPlayer.isAlive) { return; }
     var rot = movement.rot - 1.5708;
     var changey = bulletMultiplier * Math.sin(rot);
     var changex = bulletMultiplier * Math.cos(rot);
@@ -144,20 +144,20 @@ function FireCannon() {
     });
 }
 
-socket.emit('new player', "Cookie" + Math.round(Math.random()*100));
+socket.emit('new player', "Cookie" + Math.round(Math.random() * 100));
 socket.on("get id from server", function (id) {
     playerId = id;
 });
-socket.emit('update');
+
 
 var hasMoved = false;
 setInterval(function () {
-    if(currentPlayer.isAlive && hasMoved){
+    if (currentPlayer.isAlive) {
         socket.emit('movement', movement);
-        hasMoved = false;
+
     }
-    
-    
+
+
 }, 1000 / 60);
 
 // Auto Fire
@@ -189,8 +189,8 @@ function end() {
 
 // Update Canvas
 var canvas = document.createElement('canvas');
-canvas.width = document.body.scrollWidth+'';
-canvas.height = document.body.scrollHeight+'';
+canvas.width = document.body.scrollWidth + '';
+canvas.height = document.body.scrollHeight + '';
 canvasWidth = document.body.scrollWidth;
 canvasHeight = document.body.scrollHeight;
 
@@ -202,41 +202,39 @@ canvasHeight = document.body.scrollHeight;
 
 var context = canvas.getContext('2d');
 
-socket.on('done', function(){
-    
-    
-    var time = end();
-    console.log("new frame");
+setInterval(() => {
+    socket.emit("update");
     socket.emit("get state");
     onScreenContext.drawImage(canvas, 0, 0);
-   
-})
+}, 1000 / 60);
+
+
 var leaderBoardTick = 0;
 var skippedFrames = 0;
 socket.on('state', function (data) {
-    
-    console.log(new Date()-new Date(data.time));
+
+    console.log(new Date() - new Date(data.time));
     start();
-    if(data.players[playerId] == undefined){return;}
-    if(data.players[playerId].isAlive){
+    if (data.players[playerId] == undefined) { return; }
+    if (data.players[playerId].isAlive) {
         //context.clearRect(0, 0, canvasWidth, canvasHeight);
         context.save();
-        
+
         // Use the identity matrix while clearing the canvas
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.clearRect(0, 0, canvas.width, canvas.height);
-        
+
         // Restore the transform
         context.restore();
         context.fillStyle = '#dbdbdb';
         context.fillRect(0, 0, canvasWidth, canvasHeight);
         context.fillStyle = 'green';
-        currentPlayer = data.players[playerId] || {x:0,y:0};
+        currentPlayer = data.players[playerId] || { x: 0, y: 0 };
         DrawBackground(currentPlayer);
         for (var id in data.bullets) {
             var bullet = data.bullets[id];
-            if (bullet.life<=0) { continue; }
-            if (!inRange(bullet)){ continue; }
+            if (bullet.life <= 0) { continue; }
+            if (!inRange(bullet)) { continue; }
             DrawBullets(bullet, id);
         }
         for (var id in data.particles) {
@@ -248,14 +246,14 @@ socket.on('state', function (data) {
         context.globalAlpha = 1;
         for (var id in data.players) {
             var player = data.players[id];
-            if(!player.isAlive){continue;}
+            if (!player.isAlive) { continue; }
             UpdateScreen(player, id);
         }
         DrawAnimatedBullets(data.animate.animatedBullets);
         context.globalAlpha = 1;
         if (leaderBoardTick < 60) {
             leaderBoardTick++;
-        }else{
+        } else {
             leaderBoardTick = 0;
             var leaders = data.leaderboard.slice(0, leaderBoardCount);
             DrawLeaderBoard(leaders);
@@ -266,7 +264,7 @@ socket.on('state', function (data) {
     }
     setTimeout(() => {
         socket.emit('update');
-    }, 16-end());
+    }, 16 - end());
     console.log("Frame:" + end());
 });
 
@@ -277,13 +275,13 @@ function UpdateScreen(player, id) {
 
 function inRange(testEr) {
     var testOn = currentPlayer;
-    
+
     var distx = Math.pow(Math.abs(testOn.x - testEr.x), 2);
     var disty = Math.pow(Math.abs(testOn.y - testEr.y), 2);
     var totalDist = Math.sqrt(distx + disty);
-    if(totalDist>canvasWidth+tileSize){
+    if (totalDist > canvasWidth + tileSize) {
         return false;
-    }else{
+    } else {
         return true;
     }
 }
@@ -291,13 +289,13 @@ function inRange(testEr) {
 function DrawLeaderBoard(leaders) {
     var leadersList = document.getElementById("leaders");
     var leadersText = "";
-    
+
     for (var id in leaders) {
-        var leader = leaders[id];    
-        if(leader.id == playerId){
-            leadersText += "<li class='you'>" + leader.name + "<span class = 'score'>" + leader.score +" </span></li>";
-        }else{
-            leadersText += "<li>" + leader.name + "<span class = 'score'>" + leader.score +" </span></li>";
+        var leader = leaders[id];
+        if (leader.id == playerId) {
+            leadersText += "<li class='you'>" + leader.name + "<span class = 'score'>" + leader.score + " </span></li>";
+        } else {
+            leadersText += "<li>" + leader.name + "<span class = 'score'>" + leader.score + " </span></li>";
         }
     }
     leadersList.innerHTML = leadersText;
@@ -306,26 +304,26 @@ function DrawLeaderBoard(leaders) {
 function DrawBackground(player) {
     var ctx = context;
     for (let Yindex = 0; Yindex < landHeight / tileSize; Yindex++) {
-        for (let Xindex = 0; Xindex < landWidth/tileSize; Xindex++) {
-            if (map[Yindex][Xindex]==0){
-                ctx.drawImage(img, canvasWidth/2 + player.x + Xindex*tileSize, canvasHeight/2 + player.y + Yindex*tileSize, tileSize, tileSize);
-            }else{
+        for (let Xindex = 0; Xindex < landWidth / tileSize; Xindex++) {
+            if (map[Yindex][Xindex] == 0) {
+                ctx.drawImage(img, canvasWidth / 2 + player.x + Xindex * tileSize, canvasHeight / 2 + player.y + Yindex * tileSize, tileSize, tileSize);
+            } else {
                 context.fillStyle = '#eb4034';
                 ctx.fillRect(canvasWidth / 2 + player.x + Xindex * tileSize, canvasHeight / 2 + player.y + Yindex * tileSize, tileSize, tileSize)
             }
         }
     }
 }
-function DrawWeapon(player, id){
+function DrawWeapon(player, id) {
     context.fillStyle = '#333';
     var ctx = context;
     ctx.save();
-    if(id == playerId){
-        ctx.translate(canvasWidth/2, canvasHeight/2);
+    if (id == playerId) {
+        ctx.translate(canvasWidth / 2, canvasHeight / 2);
         ctx.rotate(player.rot);
         ctx.fillRect(-10, 0, cannonWidth, cannonLength);
-    }else{
-        ctx.translate(canvasWidth/2 + currentPlayer.x - player.x, canvasHeight/2 + currentPlayer.y - player.y);
+    } else {
+        ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
         ctx.rotate(player.rot);
         ctx.fillRect(-10, 0, cannonWidth, cannonLength);
     }
@@ -336,10 +334,10 @@ function DrawPlayer(player, id) {
     var ctx = context;
     if (id == playerId) {
         context.fillStyle = '#4287f5';
-        context.arc(canvasWidth/2, canvasHeight/2, playerRadius, 0, 2 * Math.PI);
-    }else{
+        context.arc(canvasWidth / 2, canvasHeight / 2, playerRadius, 0, 2 * Math.PI);
+    } else {
         context.fillStyle = '#eb4034';
-        context.arc(canvasWidth/2+currentPlayer.x-player.x, canvasHeight/2+currentPlayer.y-player.y, playerRadius, 0, 2 * Math.PI);
+        context.arc(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y, playerRadius, 0, 2 * Math.PI);
     }
     context.fill();
     // Health Bar
@@ -352,15 +350,15 @@ function DrawPlayer(player, id) {
     ctx.beginPath();
     context.strokeStyle = '#111';
     context.lineWidth = 6;
-    ctx.moveTo(canvasWidth / 2 + currentPlayer.x - player.x - healthBarLength/2, canvasHeight / 2 + currentPlayer.y - player.y + healthBarOffset);
-    ctx.lineTo(canvasWidth / 2 + currentPlayer.x - player.x - healthBarLength / 2 + healthBarLength*(player.health/100), canvasHeight / 2 + currentPlayer.y - player.y + healthBarOffset);
+    ctx.moveTo(canvasWidth / 2 + currentPlayer.x - player.x - healthBarLength / 2, canvasHeight / 2 + currentPlayer.y - player.y + healthBarOffset);
+    ctx.lineTo(canvasWidth / 2 + currentPlayer.x - player.x - healthBarLength / 2 + healthBarLength * (player.health / 100), canvasHeight / 2 + currentPlayer.y - player.y + healthBarOffset);
     ctx.stroke();
 }
 
 function DrawBullets(bullet, id) {
     context.beginPath();
     context.fillStyle = '#777';
-    context.arc(canvasWidth / 2 + currentPlayer.x - bullet.x, canvasHeight / 2 + currentPlayer.y - bullet.y, cannonWidth/2, 0, 2 * Math.PI);
+    context.arc(canvasWidth / 2 + currentPlayer.x - bullet.x, canvasHeight / 2 + currentPlayer.y - bullet.y, cannonWidth / 2, 0, 2 * Math.PI);
     context.fill();
 }
 
@@ -382,18 +380,18 @@ function DrawAnimatedParticles(particlesList) {
         context.beginPath();
         if (particles.type == 0) {
             context.fillStyle = '#23c449';
-        var numberOfSides = 4,
-        size = particleSize / 2,
-        Xcenter = canvasWidth / 2 + currentPlayer.x - particles.x,
-            Ycenter = canvasHeight / 2 + currentPlayer.y - particles.y;
-            
+            var numberOfSides = 4,
+                size = particleSize / 2,
+                Xcenter = canvasWidth / 2 + currentPlayer.x - particles.x,
+                Ycenter = canvasHeight / 2 + currentPlayer.y - particles.y;
+
             context.beginPath();
             context.moveTo(Xcenter + size * Math.cos(0), Ycenter + size * Math.sin(0));
-            
+
             for (var i = 1; i <= numberOfSides; i += 1) {
                 context.lineTo(Xcenter + size * Math.cos(i * 2 * Math.PI / numberOfSides), Ycenter + size * Math.sin(i * 2 * Math.PI / numberOfSides));
             }
-            
+
             context.fill();
             context.fill();
         } else if (particles.type == 1) {
@@ -408,29 +406,29 @@ function DrawAnimatedParticles(particlesList) {
             context.lineTo(X, Y);
             context.fill();
             context.closePath();
-            
+
         } else {
             context.fillStyle = '#8b6df7';
             var numberOfSides = 6,
-            size = particleSize / 2,
-            Xcenter = canvasWidth / 2 + currentPlayer.x - particles.x,
-            Ycenter = canvasHeight / 2 + currentPlayer.y - particles.y;
-            
+                size = particleSize / 2,
+                Xcenter = canvasWidth / 2 + currentPlayer.x - particles.x,
+                Ycenter = canvasHeight / 2 + currentPlayer.y - particles.y;
+
             context.beginPath();
             context.moveTo(Xcenter + size * Math.cos(0), Ycenter + size * Math.sin(0));
-            
+
             for (var i = 1; i <= numberOfSides; i += 1) {
                 context.lineTo(Xcenter + size * Math.cos(i * 2 * Math.PI / numberOfSides), Ycenter + size * Math.sin(i * 2 * Math.PI / numberOfSides));
             }
-            
+
             context.fill();
         }
     }
 }
-    
-    function DrawParticles (particles, id) {
-        
-        
+
+function DrawParticles(particles, id) {
+
+
     if (particles.type == 0) {
         context.fillStyle = '#23c449';
         //context.shadowColor = "#23c449";
@@ -448,7 +446,7 @@ function DrawAnimatedParticles(particlesList) {
 
         context.fill();
         context.fill();
-    }else if (particles.type == 1) {
+    } else if (particles.type == 1) {
         var X = canvasWidth / 2 + currentPlayer.x - particles.x;
         var Y = canvasHeight / 2 + currentPlayer.y - particles.y;
         context.fillStyle = '#fcba03';
@@ -456,17 +454,17 @@ function DrawAnimatedParticles(particlesList) {
         var height = particleSize * (Math.sqrt(3) / 2);
         context.beginPath();
         context.moveTo(X, Y);
-        context.lineTo(X + particleSize/2, Y + height);
-        context.lineTo(X - particleSize/2, Y + height);
+        context.lineTo(X + particleSize / 2, Y + height);
+        context.lineTo(X - particleSize / 2, Y + height);
         context.lineTo(X, Y);
         context.fill();
         context.closePath();
-        
-    }else{
+
+    } else {
         context.fillStyle = '#8b6df7';
         //context.shadowColor = "#8b6df7";
         var numberOfSides = 6,
-            size = particleSize/2,
+            size = particleSize / 2,
             Xcenter = canvasWidth / 2 + currentPlayer.x - particles.x,
             Ycenter = canvasHeight / 2 + currentPlayer.y - particles.y;
 
@@ -480,12 +478,12 @@ function DrawAnimatedParticles(particlesList) {
         context.fill();
     }
 
-        
+
 }
 
 function ShowGameOverScreenAnim() {
     context.fillStyle = "black";
-    if(gameOverAnim > 0.8){
+    if (gameOverAnim > 0.8) {
         gameOverAnim = 0.8;
     }
     context.globalAlpha = gameOverAnim;
@@ -493,6 +491,6 @@ function ShowGameOverScreenAnim() {
     gameOverAnim += gameOverAnimSpeed;
     setTimeout(() => {
         ShowGameOverScreenAnim();
-    }, 1000/24);
+    }, 1000 / 24);
 }
 
