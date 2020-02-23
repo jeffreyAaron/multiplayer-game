@@ -204,10 +204,16 @@ function FireCannon() {
 var text = document.getElementById("nameBox");
 var textDiv = document.getElementById("nameDiv");
 var textBtn = document.getElementById("nameBtn");
-
+var leaderboard = document.getElementById("leaderboard");
+var cns = document.getElementById("screen");
+leaderboard.style.display = "none";
+cns.style.display = "none";
 function StartGame (){
+    leaderboard.style.display = "block";
+    document.getElementById("flyer").style.display = "none";
+    cns.style.display = "block";
     
-    socket.emit('new player', text.value);
+    socket.emit('new player', text.value == "" ? "Player" : text.value);
     textDiv.style.display = "none";
     
 }
