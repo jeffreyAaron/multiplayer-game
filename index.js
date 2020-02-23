@@ -526,12 +526,15 @@ function CheckBulletWallCollision() {
 }
 
 function CannonLaunch(data, socket) {
-    var changey = data.changey;
-    var changex = data.changex;
+    var changey = data.changey * (((players[socket.id] || { bulletSpeed: 1 }).bulletSpeed) / 8 + 1);
+    var changex = data.changex * (((players[socket.id] || { bulletSpeed: 1 }).bulletSpeed) / 8 + 1);
+    data.changey = changey;
+    data.changex = changex;
+    //console.log((((players[socket.id] || { bulletSpeed: 1 }).bulletSpeed) / 3 + 1));
     data.opacity = 1;
-    data.life = cannonLife + ((players[socket.playerId] || { bulletPenetration: 1 }).bulletPenetration /8) * cannonLife;
-    (players[socket.id] || {velx:1}).velx -= changex / (bulletMultiplier + ((players[socket.playerId] || { bulletSpeed: 1 }).bulletSpeed)/8 * bulletMultiplier) / 2;
-    (players[socket.id] || { vely: 1 }).vely -= changey / (bulletMultiplier + ((players[socket.playerId] || { bulletSpeed: 1 }).bulletSpeed) / 8 * bulletMultiplier) / 2;
+    data.life = cannonLife + ((players[socket.id] || { bulletPenetration: 1 }).bulletPenetration /8) * cannonLife;
+    (players[socket.id] || { velx: 1 }).velx -= changex / (bulletMultiplier + ((players[socket.id] || { bulletSpeed: 1 }).bulletSpeed)/8 * bulletMultiplier) / 2;
+    (players[socket.id] || { vely: 1 }).vely -= changey / (bulletMultiplier + ((players[socket.id] || { bulletSpeed: 1 }).bulletSpeed) / 8 * bulletMultiplier) / 2;
     bullets.push(data);
 }
 

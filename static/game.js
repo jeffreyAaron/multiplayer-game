@@ -61,7 +61,7 @@ var map = [
 // Player Specific Constants
 var autofire = false;
 var playerId = "";
-var points = 0;
+var points = 1110;
 var currentPlayer = {
     rot: 0,
     isAlive: true,
@@ -116,35 +116,35 @@ document.addEventListener('keyup', function (event) {
             autofire = !autofire;
             break;
         case 49: // 1
-            if(points > 0){
+            if (points > 0 && currentPlayer.bulletDamage < 8){
                 socket.emit("add to bulletDamage");
                 points--;
                 showpowerups = true;
             }
             break;
         case 50: // 2
-            if (points > 0) {
+            if (points > 0 && currentPlayer.bulletPenetration < 8) {
             socket.emit("add to bulletPenetration");
                 points--;
                 showpowerups = true;
             }
             break;
         case 51: // 3
-            if (points > 0) {
+            if (points > 0 && currentPlayer.bulletSpeed < 8) {
             socket.emit("add to bulletSpeed");
                 points--;
                 showpowerups = true;
             }
             break;
         case 52: // 4
-            if (points > 0) {
+            if (points > 0 && currentPlayer.reload < 8) {
             socket.emit("add to reload");
                 points--;
                 showpowerups = true;
             }
             break;
         case 53: // 5
-            if (points > 0) {
+            if (points > 0 && currentPlayer.movementSpeed < 8) {
             socket.emit("add to movementSpeed");
                 points--;
                 showpowerups = true;
