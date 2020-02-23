@@ -28,6 +28,8 @@ var level = 1;
 var oldLevel = 1;
 var levelIncreaseGrain = 10;
 var pointsPerLevel = 3;
+var powerupoff = 0;
+var showpowerups = true;
 var img;
 var onScreenContext;
 
@@ -58,7 +60,7 @@ var map = [
 // Player Specific Constants
 var autofire = false;
 var playerId = "";
-var points = 1000;
+var points = 0;
 var currentPlayer = {
     rot: 0,
     isAlive: true,
@@ -116,31 +118,39 @@ document.addEventListener('keyup', function (event) {
             if(points > 0){
                 socket.emit("add to bulletDamage");
                 points--;
+                showpowerups = true;
             }
             break;
         case 50: // 2
             if (points > 0) {
             socket.emit("add to bulletPenetration");
                 points--;
+                showpowerups = true;
             }
             break;
         case 51: // 3
             if (points > 0) {
             socket.emit("add to bulletSpeed");
                 points--;
+                showpowerups = true;
             }
             break;
         case 52: // 4
             if (points > 0) {
             socket.emit("add to reload");
                 points--;
+                showpowerups = true;
             }
             break;
         case 53: // 5
             if (points > 0) {
             socket.emit("add to movementSpeed");
                 points--;
+                showpowerups = true;
             }
+            break;
+        case 81: // Q
+            showpowerups = !showpowerups;
             break;
     }
 });
@@ -278,6 +288,25 @@ socket.on('state', function (data) {
         points += Math.abs(currentPlayer.tankLevel-oldLevel)*pointsPerLevel;
         oldLevel = currentPlayer.tankLevel;
     }
+    if(!showpowerups){
+        var on = 400;
+        
+        powerupoff -= Math.abs(on-Math.abs(powerupoff))/10;
+
+        if(powerupoff < -on){
+            powerupoff = -on;
+        }
+        
+    }else{
+        var on = 500;
+
+        powerupoff += Math.abs(0 - Math.abs(powerupoff)) / 10;
+
+        if (powerupoff > 0) {
+            powerupoff = 0;
+        }
+
+    }
     console.log(new Date() - new Date(data.time));
     start();
     if (data.players[playerId] == undefined) { return; }
@@ -411,26 +440,32 @@ function DrawBackground(player) {
 }
 
 function DrawPowerups(bulletDamage, bulletPenetration, bulletSpeed, reload, movementSpeed) {
-    var x = 150;
+    var x = 170;
     var y = 60;
     var yoff = 30;
     var dist = 4;
     var width = 8;
     var height = 8;
+    
+    context.font = "15px Segoe UI";
+    context.fillText("Press [Q] to toggle powerups.", 10 , y + 7.5);
+    context.font = "20px Segoe UI";
+    context.fillText(points + " points", 10 + powerupoff, y+ yoff*5 + 7.5);
+    context.fillText(points + " points", 10 , y  +yoff+ 7.5);
     context.fillStyle = "white";
-    context.fillRect(5, y-10, 243, yoff*4+25)
-    Drawbars(8, bulletDamage, context, x, y + yoff * 0, dist, width, height);
-    Drawbars(8, bulletPenetration, context, x, y + yoff * 1, dist, width, height);
-    Drawbars(8, bulletSpeed, context, x, y + yoff * 2, dist, width, height);
-    Drawbars(8, reload, context, x, y + yoff * 3, dist, width, height);
-    Drawbars(8, movementSpeed, context, x, y + yoff * 4, dist, width, height);
+    context.fillRect(5 + powerupoff, y-10, 260, yoff*4+25)
+    Drawbars(8, bulletDamage, context, x+powerupoff, y + yoff * 0, dist, width, height);
+    Drawbars(8, bulletPenetration, context, x + powerupoff, y + yoff * 1, dist, width, height);
+    Drawbars(8, bulletSpeed, context, x + powerupoff, y + yoff * 2, dist, width, height);
+    Drawbars(8, reload, context, x + powerupoff, y + yoff * 3, dist, width, height);
+    Drawbars(8, movementSpeed, context, x + powerupoff, y + yoff * 4, dist, width, height);
     context.fillStyle = "#333"
     context.font = "15px Segoe UI";
-    context.fillText("Bullet Damage:", 10, y + yoff * 0+7.5);
-    context.fillText("Bullet Penetration:", 10, y + yoff * 1 + 7.5);
-    context.fillText("Bullet Speed:", 10, y + yoff * 2 + 7.5);
-    context.fillText("Reload:", 10, y + yoff * 3 + 7.5);
-    context.fillText("Movement Speed:", 10, y + yoff * 4 + 7.5);
+    context.fillText("[1] Bullet Damage", 10 + powerupoff, y + yoff * 0+7.5);
+    context.fillText("[2] Bullet Penetration", 10 + powerupoff, y + yoff * 1 + 7.5);
+    context.fillText("[3] Bullet Speed", 10 + powerupoff, y + yoff * 2 + 7.5);
+    context.fillText("[4] Reload", 10 + powerupoff, y + yoff * 3 + 7.5);
+    context.fillText("[5] Movement Speed", 10 + powerupoff, y + yoff * 4 + 7.5);
 }
 
 function Drawbars(number, filled, ctx, x, y, dist, width, height) {
