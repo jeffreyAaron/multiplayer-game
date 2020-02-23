@@ -145,6 +145,7 @@ io.on('connection', function (socket) {
             bullets: bullets,
             particles: particles,
             leaderboard: leaders,
+            
             animate: {
                 animatedBullets: animatedBullets,
                 animatedParticles: animatedParticles
@@ -156,27 +157,42 @@ io.on('connection', function (socket) {
     socket.on('add to bulletDamage', function () {
         var player = players[socket.id] || {};
         player.bulletDamage += 1;
+        if (player.bulletDamage > 8) {
+            player.bulletDamage = 8;
+        }
 
     });
     socket.on('add to bulletPenetration', function () {
         var player = players[socket.id] || {};
         player.bulletPenetration += 1;
+        if (player.bulletPenetration > 8) {
+            player.bulletPenetration = 8;
+        }
 
     });
     socket.on('add to bulletSpeed', function () {
         var player = players[socket.id] || {};
         player.bulletSpeed += 1;
+        if (player.bulletSpeed > 8) {
+            player.bulletSpeed = 8;
+        }
 
     });
     socket.on('add to reload', function () {
         var player = players[socket.id] || {};
         player.reload += 1;
+        if (player.reload > 8) {
+            player.reload = 8;
+        }
 
     });
     socket.on('add to movementSpeed', function () {
         var player = players[socket.id] || {};
-        console.log(player.movementSpeed);
+        //console.log(player.movementSpeed);
         player.movementSpeed += 1;
+        if(player.movementSpeed > 8){
+            player.movementSpeed = 8;
+        }
 
     });
     socket.on('disconnect', function () {

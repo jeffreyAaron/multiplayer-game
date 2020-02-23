@@ -246,6 +246,19 @@ realCanvas.height = document.body.scrollHeight;
 canvasWidth = document.body.scrollWidth;
 canvasHeight = document.body.scrollHeight;
 
+CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    this.beginPath();
+    this.moveTo(x + r, y);
+    this.arcTo(x + w, y, x + w, y + h, r);
+    this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r);
+    this.arcTo(x, y, x + w, y, r);
+    this.closePath();
+    return this;
+}
+
 var context = canvas.getContext('2d');
 
 setInterval(() => {
@@ -314,10 +327,9 @@ socket.on('state', function (data) {
     else {
         ShowGameOverScreenAnim();
     }
-    setTimeout(() => {
-        socket.emit('update');
-    }, 16 - end());
-    console.log("Frame:" + end());
+    console.log(data);
+    DrawPowerups(currentPlayer.bulletDamage, currentPlayer.bulletPenetration, currentPlayer.bulletSpeed, currentPlayer.reload, currentPlayer.movementSpeed)
+
 });
 
 function UpdateScreen(player, id) {
@@ -397,6 +409,42 @@ function DrawBackground(player) {
         }
     }
 }
+
+function DrawPowerups(bulletDamage, bulletPenetration, bulletSpeed, reload, movementSpeed) {
+    var x = 150;
+    var y = 60;
+    var yoff = 30;
+    var dist = 4;
+    var width = 8;
+    var height = 8;
+    context.fillStyle = "white";
+    context.fillRect(5, y-10, 243, yoff*4+25)
+    Drawbars(8, bulletDamage, context, x, y + yoff * 0, dist, width, height);
+    Drawbars(8, bulletPenetration, context, x, y + yoff * 1, dist, width, height);
+    Drawbars(8, bulletSpeed, context, x, y + yoff * 2, dist, width, height);
+    Drawbars(8, reload, context, x, y + yoff * 3, dist, width, height);
+    Drawbars(8, movementSpeed, context, x, y + yoff * 4, dist, width, height);
+    context.fillStyle = "#333"
+    context.font = "15px Segoe UI";
+    context.fillText("Bullet Damage:", 10, y + yoff * 0+7.5);
+    context.fillText("Bullet Penetration:", 10, y + yoff * 1 + 7.5);
+    context.fillText("Bullet Speed:", 10, y + yoff * 2 + 7.5);
+    context.fillText("Reload:", 10, y + yoff * 3 + 7.5);
+    context.fillText("Movement Speed:", 10, y + yoff * 4 + 7.5);
+}
+
+function Drawbars(number, filled, ctx, x, y, dist, width, height) {
+    for (let index = 0; index < number; index++) {
+        if(index < filled){
+            ctx.fillStyle = "#fccd56";
+        }else{
+            ctx.fillStyle = "#444";
+        }
+        ctx.roundRect(x + index * (dist + width), y, width, height, 4).fill();
+    }
+    
+}
+
 function DrawWeapon(player, id) {
     console.log(player.tankLevel);
     context.fillStyle = '#333';
