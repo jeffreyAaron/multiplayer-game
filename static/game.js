@@ -284,8 +284,8 @@ var leaderBoardTick = 0;
 var skippedFrames = 0;
 socket.on('state', function (data) {
     currentPlayer = data.players[playerId] || { x: 0, y: 0 };
-    if(currentPlayer.tankLevel != oldLevel){
-        points += Math.abs(currentPlayer.tankLevel-oldLevel)*pointsPerLevel;
+    if (Math.floor(currentPlayer.tankLevel) != Math.floor(oldLevel)){
+        points += Math.round(Math.abs(currentPlayer.tankLevel-oldLevel)*pointsPerLevel);
         oldLevel = currentPlayer.tankLevel;
     }
     if(!showpowerups){
