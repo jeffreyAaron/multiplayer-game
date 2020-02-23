@@ -11,7 +11,7 @@ var cannonWidth = 20;
 var cannonLength = 40;
 var cannonLife = 500;
 var bulletMultiplier = 5;
-var bulletFireTime = 500;
+var bulletFireTime = 1000;
 var playerMoveSpeed = 0;
 var playerInitVelocity = 0.5;
 var friction = 0.9;
@@ -23,8 +23,16 @@ var particleSize = 30;
 var particleHealthGain = 5;
 var particlesCount = 200;
 var leaderBoardCount = 10;
+var levelBarLength = 600;
+var level = 1;
+var oldLevel = 1;
+var levelIncreaseGrain = 10;
+var pointsPerLevel = 3;
+var powerupoff = 0;
+var showpowerups = true;
 var img;
-var onScreenContext
+var onScreenContext;
+
 window.onload = function () {
     img = document.getElementById("backgroundTile");
     onScreenContext = document.getElementById('screen').getContext('2d');
@@ -52,6 +60,7 @@ var map = [
 // Player Specific Constants
 var autofire = false;
 var playerId = "";
+var points = 0;
 var currentPlayer = {
     rot: 0,
     isAlive: true,
@@ -105,19 +114,57 @@ document.addEventListener('keyup', function (event) {
         case 69: // E
             autofire = !autofire;
             break;
+        case 49: // 1
+            if(points > 0){
+                socket.emit("add to bulletDamage");
+                points--;
+                showpowerups = true;
+            }
+            break;
+        case 50: // 2
+            if (points > 0) {
+            socket.emit("add to bulletPenetration");
+                points--;
+                showpowerups = true;
+            }
+            break;
+        case 51: // 3
+            if (points > 0) {
+            socket.emit("add to bulletSpeed");
+                points--;
+                showpowerups = true;
+            }
+            break;
+        case 52: // 4
+            if (points > 0) {
+            socket.emit("add to reload");
+                points--;
+                showpowerups = true;
+            }
+            break;
+        case 53: // 5
+            if (points > 0) {
+            socket.emit("add to movementSpeed");
+                points--;
+                showpowerups = true;
+            }
+            break;
+        case 81: // Q
+            showpowerups = !showpowerups;
+            break;
     }
 });
 document.addEventListener("mousemove", function (event) {
     hasMoved = true;
     var angle = Math.atan2(event.pageX - canvasWidth / 2, - (event.pageY - canvasHeight / 2));
-    movement.rot = angle - 1.5708 * 2;
+    movement.rot = angle - 180 *Math.PI/180;
 });
 var lastClickTime = 0, nowTime;
 document.addEventListener("click", function (event) {
     nowTime = new Date();
     var elaspedTime = nowTime.getTime() - lastClickTime;
     console.log(elaspedTime < bulletFireTime);
-    if (elaspedTime > bulletFireTime) {
+    if (elaspedTime > bulletFireTime - (currentPlayer.reload * (bulletFireTime / 2) / 8)) {
         console.log("good");
         if (!autofire) {
             FireCannon();
@@ -131,17 +178,26 @@ document.addEventListener("click", function (event) {
 
 function FireCannon() {
     if (!currentPlayer.isAlive) { return; }
-    var rot = movement.rot - 1.5708;
-    var changey = bulletMultiplier * Math.sin(rot);
-    var changex = bulletMultiplier * Math.cos(rot);
-    socket.emit('cannon', {
-        changex: changex,
-        changey: changey,
-        x: currentPlayer.x,
-        y: currentPlayer.y,
-        life: cannonLife,
-        playerId: playerId
-    });
+    var bulletsToFire = [];
+    if (Math.floor(currentPlayer.tankLevel) == 1) {
+        bulletsToFire.push(movement.rot - 90 * Math.PI / 180);
+    } else if (Math.floor(currentPlayer.tankLevel) >= 2){
+        bulletsToFire.push(movement.rot - 45 * Math.PI / 180);
+        bulletsToFire.push(movement.rot- 135 * Math.PI / 180);
+    }
+    for(var id in bulletsToFire){
+        var rot = bulletsToFire[id];
+        var changey = bulletMultiplier * Math.sin(rot);
+        var changex = bulletMultiplier * Math.cos(rot);
+        socket.emit('cannon', {
+            changex: changex,
+            changey: changey,
+            x: currentPlayer.x + (changex / bulletMultiplier) * cannonLength,
+            y: currentPlayer.y + (changey / bulletMultiplier) * cannonLength,
+            life: cannonLife,
+            playerId: playerId
+        });
+    }
 }
 
 socket.emit('new player', "Cookie" + Math.round(Math.random() * 100));
@@ -156,16 +212,16 @@ setInterval(function () {
         socket.emit('movement', movement);
 
     }
-
-
 }, 1000 / 60);
 
 // Auto Fire
-setInterval(function () {
+AutoFire();
+function AutoFire() {
     if (autofire) {
         FireCannon();
     }
-}, bulletFireTime);
+    setTimeout(AutoFire, bulletFireTime - (currentPlayer.reload * (bulletFireTime/2) / 8));
+}
 var latency = 0;
 socket.on('pong', function (ms) {
     latency = ms;
@@ -200,19 +256,57 @@ realCanvas.height = document.body.scrollHeight;
 canvasWidth = document.body.scrollWidth;
 canvasHeight = document.body.scrollHeight;
 
+CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    this.beginPath();
+    this.moveTo(x + r, y);
+    this.arcTo(x + w, y, x + w, y + h, r);
+    this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r);
+    this.arcTo(x, y, x + w, y, r);
+    this.closePath();
+    return this;
+}
+
 var context = canvas.getContext('2d');
 
 setInterval(() => {
     socket.emit("update");
     socket.emit("get state");
-    onScreenContext.drawImage(canvas, 0, 0);
+    if(canvas!=undefined){
+        onScreenContext.drawImage(canvas, 0, 0);
+    }
 }, 1000 / 60);
 
 
 var leaderBoardTick = 0;
 var skippedFrames = 0;
 socket.on('state', function (data) {
+    currentPlayer = data.players[playerId] || { x: 0, y: 0 };
+    if (Math.floor(currentPlayer.tankLevel) != Math.floor(oldLevel)){
+        points += Math.round(Math.abs(currentPlayer.tankLevel-oldLevel)*pointsPerLevel);
+        oldLevel = currentPlayer.tankLevel;
+    }
+    if(!showpowerups){
+        var on = 400;
+        
+        powerupoff -= Math.abs(on-Math.abs(powerupoff))/10;
 
+        if(powerupoff < -on){
+            powerupoff = -on;
+        }
+        
+    }else{
+        var on = 500;
+
+        powerupoff += Math.abs(0 - Math.abs(powerupoff)) / 10;
+
+        if (powerupoff > 0) {
+            powerupoff = 0;
+        }
+
+    }
     console.log(new Date() - new Date(data.time));
     start();
     if (data.players[playerId] == undefined) { return; }
@@ -229,7 +323,6 @@ socket.on('state', function (data) {
         context.fillStyle = '#dbdbdb';
         context.fillRect(0, 0, canvasWidth, canvasHeight);
         context.fillStyle = 'green';
-        currentPlayer = data.players[playerId] || { x: 0, y: 0 };
         DrawBackground(currentPlayer);
         for (var id in data.bullets) {
             var bullet = data.bullets[id];
@@ -258,19 +351,50 @@ socket.on('state', function (data) {
             var leaders = data.leaderboard.slice(0, leaderBoardCount);
             DrawLeaderBoard(leaders);
         }
+        DrawLevel();
     }
     else {
         ShowGameOverScreenAnim();
     }
-    setTimeout(() => {
-        socket.emit('update');
-    }, 16 - end());
-    console.log("Frame:" + end());
+    console.log(data);
+    DrawPowerups(currentPlayer.bulletDamage, currentPlayer.bulletPenetration, currentPlayer.bulletSpeed, currentPlayer.reload, currentPlayer.movementSpeed)
+
 });
 
 function UpdateScreen(player, id) {
     DrawWeapon(player, id);
     DrawPlayer(player, id);
+}
+
+function DrawLevel(){
+    var ctx = context;
+    var playerLevel = currentPlayer.tankLevel;
+    var offset = playerLevel-level;
+    level += offset/levelIncreaseGrain;
+    var levelCalc = (1 - (level - ~~level));
+
+    var diff = Math.abs(offset);
+
+    if (diff < 0.001) {
+        level = playerLevel;
+    }
+    // Level Bar
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    context.strokeStyle = '#666';
+ 
+    ctx.moveTo(canvasWidth / 2 - levelBarLength / 2, 0);
+    ctx.lineTo(canvasWidth / 2 + levelBarLength / 2, 0);
+    ctx.stroke();
+    ctx.beginPath();
+    context.strokeStyle = '#fccd56';
+    
+    ctx.moveTo(canvasWidth / 2 - levelBarLength / 2, 0);
+    ctx.lineTo(canvasWidth / 2 + levelBarLength / 2 - levelBarLength * levelCalc, 0);
+    ctx.stroke();
+
+    ctx.font = "30px Segoe UI";
+    ctx.fillText("Level: " + ~~level , 10, 30);
 }
 
 function inRange(testEr) {
@@ -314,18 +438,77 @@ function DrawBackground(player) {
         }
     }
 }
+
+function DrawPowerups(bulletDamage, bulletPenetration, bulletSpeed, reload, movementSpeed) {
+    var x = 170;
+    var y = 60;
+    var yoff = 30;
+    var dist = 4;
+    var width = 8;
+    var height = 8;
+    
+    context.font = "15px Segoe UI";
+    context.fillText("Press [Q] to toggle powerups.", 10 , y + 7.5);
+    context.font = "20px Segoe UI";
+    context.fillText(points + " points", 10 + powerupoff, y+ yoff*5 + 7.5);
+    context.fillText(points + " points", 10 , y  +yoff+ 7.5);
+    context.fillStyle = "white";
+    context.fillRect(5 + powerupoff, y-10, 260, yoff*4+25)
+    Drawbars(8, bulletDamage, context, x+powerupoff, y + yoff * 0, dist, width, height);
+    Drawbars(8, bulletPenetration, context, x + powerupoff, y + yoff * 1, dist, width, height);
+    Drawbars(8, bulletSpeed, context, x + powerupoff, y + yoff * 2, dist, width, height);
+    Drawbars(8, reload, context, x + powerupoff, y + yoff * 3, dist, width, height);
+    Drawbars(8, movementSpeed, context, x + powerupoff, y + yoff * 4, dist, width, height);
+    context.fillStyle = "#333"
+    context.font = "15px Segoe UI";
+    context.fillText("[1] Bullet Damage", 10 + powerupoff, y + yoff * 0+7.5);
+    context.fillText("[2] Bullet Penetration", 10 + powerupoff, y + yoff * 1 + 7.5);
+    context.fillText("[3] Bullet Speed", 10 + powerupoff, y + yoff * 2 + 7.5);
+    context.fillText("[4] Reload", 10 + powerupoff, y + yoff * 3 + 7.5);
+    context.fillText("[5] Movement Speed", 10 + powerupoff, y + yoff * 4 + 7.5);
+}
+
+function Drawbars(number, filled, ctx, x, y, dist, width, height) {
+    for (let index = 0; index < number; index++) {
+        if(index < filled){
+            ctx.fillStyle = "#fccd56";
+        }else{
+            ctx.fillStyle = "#444";
+        }
+        ctx.roundRect(x + index * (dist + width), y, width, height, 4).fill();
+    }
+    
+}
+
 function DrawWeapon(player, id) {
+    console.log(player.tankLevel);
     context.fillStyle = '#333';
     var ctx = context;
     ctx.save();
     if (id == playerId) {
-        ctx.translate(canvasWidth / 2, canvasHeight / 2);
-        ctx.rotate(player.rot);
-        ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+        if (Math.floor(player.tankLevel) == 1){
+            ctx.translate(canvasWidth / 2, canvasHeight / 2);
+            ctx.rotate(player.rot);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+        } else if (Math.floor(player.tankLevel) >= 2){
+            ctx.translate(canvasWidth / 2, canvasHeight / 2);
+            ctx.rotate(player.rot + (-45) * Math.PI / 180);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.rotate((90) * Math.PI / 180);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+        }
     } else {
-        ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
-        ctx.rotate(player.rot);
-        ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+        if (Math.floor(player.tankLevel) == 1) {
+            ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
+            ctx.rotate(player.rot);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+        } else if (Math.floor(player.tankLevel) >= 2) {
+            ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
+            ctx.rotate(player.rot - Math.PI + (-45) * 180 / Math.PI);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.rotate((90) * 180 / Math.PI);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+        }
     }
     ctx.restore();
 }

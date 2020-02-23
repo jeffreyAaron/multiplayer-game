@@ -27,6 +27,7 @@ var particleSpeed = 0.3;
 var bulletAnimationSpeed = 0.08;
 var particleAnimationSpeed = 0.08;
 var latency = 0;
+var levelUpAmount = 3;
 
 // Land Configuration
 var map = [
@@ -116,6 +117,7 @@ io.on('connection', function (socket) {
         CheckPlayerCollision(resetTo, socket);
         CheckWallCollision(resetTo, socket);
         CheckPos(socket);
+        UpdatePlayerLevel(socket);
 
 
 
@@ -143,12 +145,54 @@ io.on('connection', function (socket) {
             bullets: bullets,
             particles: particles,
             leaderboard: leaders,
+            
             animate: {
                 animatedBullets: animatedBullets,
                 animatedParticles: animatedParticles
             },
             time: time
         });
+
+    });
+    socket.on('add to bulletDamage', function () {
+        var player = players[socket.id] || {};
+        player.bulletDamage += 1;
+        if (player.bulletDamage > 8) {
+            player.bulletDamage = 8;
+        }
+
+    });
+    socket.on('add to bulletPenetration', function () {
+        var player = players[socket.id] || {};
+        player.bulletPenetration += 1;
+        if (player.bulletPenetration > 8) {
+            player.bulletPenetration = 8;
+        }
+
+    });
+    socket.on('add to bulletSpeed', function () {
+        var player = players[socket.id] || {};
+        player.bulletSpeed += 1;
+        if (player.bulletSpeed > 8) {
+            player.bulletSpeed = 8;
+        }
+
+    });
+    socket.on('add to reload', function () {
+        var player = players[socket.id] || {};
+        player.reload += 1;
+        if (player.reload > 8) {
+            player.reload = 8;
+        }
+
+    });
+    socket.on('add to movementSpeed', function () {
+        var player = players[socket.id] || {};
+        //console.log(player.movementSpeed);
+        player.movementSpeed += 1;
+        if(player.movementSpeed > 8){
+            player.movementSpeed = 8;
+        }
 
     });
     socket.on('disconnect', function () {
@@ -163,6 +207,7 @@ io.on('connection', function (socket) {
 setInterval(function () {
     // Update State
     UpdateBullets();
+    SetupParticles(particlesCount - particles.length);
     for (var id in particles) {
         var particle = particles[id];
         var resetData = particle;
@@ -273,7 +318,14 @@ function CreateNewPlayer(socket, name) {
         y: ypos,
         health: 100,
         score: 0,
-        name: name
+        name: name,
+        tankLevel : 1.0,
+        bulletDamage: 0, 
+        bulletPenetration: 0,
+        bulletSpeed:0,
+        reload: 0,
+        movementSpeed:0
+        
     };
 }
 
@@ -312,7 +364,8 @@ function CheckBulletCollision() {
             var disty = Math.pow(Math.abs(testOn.y - bullet.y), 2);
             var totalDist = Math.sqrt(distx + disty);
             if (totalDist < (playerRadius + cannonWidth) / 2) {
-                players[id].health -= bulletHealthLoss;
+                
+                players[id].health -= bulletHealthLoss + ((players[bullet.playerId] || { bulletDamage: 1 }).bulletDamage)/8 * bulletHealthLoss;
                 if (players[id].health <= 0) {
                     players[id].isAlive = false;
                     players[id].health = 0;
@@ -338,6 +391,7 @@ function CheckParticleBulletCollision(particle) {
             animatedParticles.push(particle);
             particles.splice(particles.indexOf(particle), 1);
             bullets.splice(bullets.indexOf(bullet), 1);
+            players[bullet.playerId].score ++;
         }
 
     }
@@ -359,6 +413,11 @@ function CheckParticleParticleCollision(particle) {
 
     }
 
+}
+
+function UpdatePlayerLevel (socket) {
+    var player = players[socket.id] || {score : 0, tankLevel : 0};
+    player.tankLevel = player.score * 1.0 / levelUpAmount + 1;
 }
 
 function CheckPlayerCollision(resetData, socket) {
@@ -467,14 +526,12 @@ function CheckBulletWallCollision() {
 }
 
 function CannonLaunch(data, socket) {
-    var rot = players[socket.id].rot - 1.5708;
-    var changey = bulletMultiplier * Math.sin(rot);
-    var changex = bulletMultiplier * Math.cos(rot);
-    data.x = players[socket.id].x + (changex / bulletMultiplier) * cannonLength || 0;
-    data.y = players[socket.id].y + (changey / bulletMultiplier) * cannonLength || 0;
+    var changey = data.changey;
+    var changex = data.changex;
     data.opacity = 1;
-    players[socket.id].velx -= changex / bulletMultiplier / 2;
-    players[socket.id].vely -= changey / bulletMultiplier / 2;
+    data.life = cannonLife + ((players[socket.playerId] || { bulletPenetration: 1 }).bulletPenetration /8) * cannonLife;
+    (players[socket.id] || {velx:1}).velx -= changex / (bulletMultiplier + ((players[socket.playerId] || { bulletSpeed: 1 }).bulletSpeed)/8 * bulletMultiplier) / 2;
+    (players[socket.id] || { vely: 1 }).vely -= changey / (bulletMultiplier + ((players[socket.playerId] || { bulletSpeed: 1 }).bulletSpeed) / 8 * bulletMultiplier) / 2;
     bullets.push(data);
 }
 
@@ -555,20 +612,20 @@ function UpdateParticleVelocity(particle) {
 function UpdateMovement(data, socket) {
     var player = players[socket.id] || {};
     if (data.left) {
-        player.x += playerMoveSpeed * latency;
-        player.velx += playerInitVelocity;
+        player.x += playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency/8);
+        player.velx += playerInitVelocity ;
     }
     if (data.up) {
-        player.y += playerMoveSpeed * latency;
-        player.vely += playerInitVelocity;
+        player.y += playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
+        player.vely += playerInitVelocity ;
     }
     if (data.right) {
-        player.x -= playerMoveSpeed * latency;
-        player.velx -= playerInitVelocity;
+        player.x -= playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
+        player.velx -= playerInitVelocity ;
     }
     if (data.down) {
-        player.y -= playerMoveSpeed * latency;
-        player.vely -= playerInitVelocity;
+        player.y -= playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
+        player.vely -= playerInitVelocity ;
     }
     player.rot = data.rot;
 }
