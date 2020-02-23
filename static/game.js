@@ -174,11 +174,13 @@ setInterval(function () {
 }, 1000 / 60);
 
 // Auto Fire
-setInterval(function () {
+AutoFire();
+function AutoFire() {
     if (autofire) {
         FireCannon();
     }
-}, bulletFireTime);
+    setTimeout(AutoFire, bulletFireTime * currentPlayer.reload);
+}
 var latency = 0;
 socket.on('pong', function (ms) {
     latency = ms;

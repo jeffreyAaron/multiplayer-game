@@ -278,11 +278,11 @@ function CreateNewPlayer(socket, name) {
         score: 0,
         name: name,
         tankLevel : 1.0,
-        bulletDamage:1, //
-        bulletPenetration:1, //
-        bulletSpeed:1,//
+        bulletDamage:2, //
+        bulletPenetration:2, //
+        bulletSpeed:2,//
         reload: 1,//
-        movementSpeed:1//
+        movementSpeed:2//
         
     };
 }
@@ -487,9 +487,9 @@ function CannonLaunch(data, socket) {
     var changey = data.changey;
     var changex = data.changex;
     data.opacity = 1;
-    data.life = cannonLife * (players[socket.playerId] || { bulletPenetration:1}).bulletPenetration
-    players[socket.id].velx -= changex / bulletMultiplier * (players[socket.playerId] || { bulletSpeed: 1 }).bulletSpeed / 2;
-    players[socket.id].vely -= changey / bulletMultiplier * (players[socket.playerId] || { bulletSpeed: 1 }).bulletSpeed / 2;
+    data.life = cannonLife * (players[socket.playerId] || { bulletPenetration:1}).bulletPenetration;
+    (players[socket.id] || {velx:1}).velx -= changex / bulletMultiplier * (players[socket.playerId] || { bulletSpeed: 1 }).bulletSpeed / 2;
+    (players[socket.id] || { vely: 1 }).vely -= changey / bulletMultiplier * (players[socket.playerId] || { bulletSpeed: 1 }).bulletSpeed / 2;
     bullets.push(data);
 }
 
