@@ -60,5 +60,10 @@ h1{
   
 }
 
+body{
+    background-image: url(/textures/background/backgroundTile4.png);
+    background-size: initial;
+}
+
 
 
