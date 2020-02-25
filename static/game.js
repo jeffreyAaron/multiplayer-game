@@ -602,7 +602,7 @@ function DrawAnimatedParticles(particlesList) {
             context.fill();
         } else if (particles.type == 1) {
             var X = canvasWidth / 2 + currentPlayer.x - particles.x;
-            var Y = canvasHeight / 2 + currentPlayer.y - particles.y;
+            var Y = canvasHeight / 2 + currentPlayer.y - particles.y - 10;
             context.fillStyle = '#fcba03';
             var height = particleSize * (Math.sqrt(3) / 2);
             context.beginPath();
@@ -653,8 +653,9 @@ function DrawParticles(particles, id) {
         context.fill();
         context.fill();
     } else if (particles.type == 1) {
+        
         var X = canvasWidth / 2 + currentPlayer.x - particles.x;
-        var Y = canvasHeight / 2 + currentPlayer.y - particles.y;
+        var Y = canvasHeight / 2 + currentPlayer.y - particles.y -10;
         context.fillStyle = '#fcba03';
         //context.shadowColor = "#fcba03";
         var height = particleSize * (Math.sqrt(3) / 2);
