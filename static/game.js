@@ -82,6 +82,7 @@ var movement = {
 }
 document.addEventListener('keydown', function (event) {
     hasMoved = true;
+    if (!started) { return; }
     switch (event.keyCode) {
         case 65: // A
             movement.left = true;
@@ -99,6 +100,7 @@ document.addEventListener('keydown', function (event) {
 });
 document.addEventListener('keyup', function (event) {
     hasMoved = true;
+    if(!started){return;}
     switch (event.keyCode) {
         case 65: // A
             movement.left = false;
