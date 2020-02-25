@@ -471,10 +471,10 @@ function DrawPowerups(bulletDamage, bulletPenetration, bulletSpeed, reload, move
     var height = 8;
     
     context.font = "15px Segoe UI";
-    context.fillText("Press [Q] to toggle powerups.", 10 , y + 7.5);
+    context.fillText("Press [Q] to toggle powerups.", 10, y + yoff * 4+ 160 * ((powerupoff) / 500)+ 7.5);
     context.font = "20px Segoe UI";
-    context.fillText(points + " points", 10 + powerupoff, y+ yoff*5 + 7.5);
-    context.fillText(points + " points", 10 , y  +yoff+ 7.5);
+    //context.fillText(points + " points", 10 + powerupoff, y+ yoff*5 + 7.5);
+    context.fillText(points + " points", 10 , y  +yoff*5 + 160*((powerupoff)/500)+ 7.5);
     context.fillStyle = "white";
     context.fillRect(5 + powerupoff, y-10, 260, yoff*4+25)
     Drawbars(8, bulletDamage, context, x+powerupoff, y + yoff * 0, dist, width, height);
