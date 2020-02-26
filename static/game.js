@@ -33,6 +33,7 @@ var showpowerups = true;
 var img;
 var onScreenContext;
 var started = false;
+var particleSpeed = 0.5;
 
 window.onload = function () {
     img = document.getElementById("backgroundTile");
@@ -203,13 +204,43 @@ function FireCannon() {
     }
 }
 
+// Update Canvas
+var canvas = document.createElement('canvas');
+canvas.width = document.body.scrollWidth + '';
+canvas.height = document.body.scrollHeight + '';
+canvasWidth = document.body.scrollWidth;
+canvasHeight = document.body.scrollHeight;
+
+var realCanvas = document.getElementById('screen');
+realCanvas.width = document.body.scrollWidth;
+realCanvas.height = document.body.scrollHeight;
+canvasWidth = document.body.scrollWidth;
+canvasHeight = document.body.scrollHeight;
+
+CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    this.beginPath();
+    this.moveTo(x + r, y);
+    this.arcTo(x + w, y, x + w, y + h, r);
+    this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r);
+    this.arcTo(x, y, x + w, y, r);
+    this.closePath();
+    return this;
+}
+
+var context = canvas.getContext('2d');
+
+// Start Screen
 var text = document.getElementById("nameBox");
 var textDiv = document.getElementById("nameDiv");
 var textBtn = document.getElementById("nameBtn");
 var leaderboard = document.getElementById("leaderboard");
 var cns = document.getElementById("screen");
+
 leaderboard.style.display = "none";
-cns.style.display = "none";
+
 function StartGame (){
     leaderboard.style.display = "block";
     document.getElementById("flyer").style.display = "none";
@@ -219,6 +250,124 @@ function StartGame (){
     textDiv.style.display = "none";
     
 }
+
+StartScreen();
+
+var particles = [];
+SetupParticles(200);
+function CheckParticleParticleCollision(particle) {
+    for (var id in particles) {
+        var testonParticle = particles[id];
+        var testOn = testonParticle;
+        if (testonParticle == particle) { continue; }
+        var testER = particle;
+        var distx = Math.pow(Math.abs(testOn.x - testER.x), 2);
+        var disty = Math.pow(Math.abs(testOn.y - testER.y), 2);
+        var totalDist = Math.sqrt(distx + disty);
+        if (totalDist < (playerRadius + playerRadius * 3)) {
+            particle.velx = -particle.velx;
+            particle.vely = -particle.vely;
+        }
+
+    }
+
+}
+
+function CheckParticlePos(particle) {
+    if (particle.x > 0) {
+        particle.x = 0;
+        particle.velx = -particle.velx;
+        particle.vely = -particle.vely;
+    }
+    if (particle.x < -landWidth) {
+        particle.x = -landWidth;
+        particle.velx = -particle.velx;
+        particle.vely = -particle.vely;
+    }
+    if (particle.y > 0) {
+        particle.y = 0;
+        particle.velx = -particle.velx;
+        particle.vely = -particle.vely;
+    }
+    if (particle.y < -landHeight) {
+        particle.y = -landHeight;
+        particle.velx = -particle.velx;
+        particle.vely = -particle.vely;
+    }
+}
+
+function UpdateParticleVelocity(particle) {
+    particle.velx = particle.velx;
+    particle.vely = particle.vely;
+    particle.x += particle.velx;
+    particle.y += particle.vely;
+
+}
+
+function SetupParticles(count) {
+    var particlesData = [];
+    for (let index = 0; index < count; index++) {
+        var xpos, ypos;
+        var foundGood = false;
+        while (!foundGood) {
+
+            xpos = -Math.random() * landWidth;
+            ypos = -Math.random() * landHeight;
+            foundGood = true;
+            for (let Yindex = 0; Yindex < landHeight / tileSize; Yindex++) {
+                for (let Xindex = 0; Xindex < landWidth / tileSize; Xindex++) {
+                    if (map[Yindex][Xindex] == 1) {
+                        var blockx = Xindex * tileSize;
+                        var blocky = Yindex * tileSize;
+                        var playerx = -xpos;
+                        var playery = -ypos;
+
+                        if (playerx >= blockx && playerx <= blockx + tileSize && playery >= blocky && playery <= blocky + tileSize) {
+                            foundGood = false;
+
+                        }
+                    }
+                }
+            }
+        }
+        var particle = {
+            x: xpos,
+            y: ypos,
+            vely: Math.random() > 0.5 ? Math.random() * particleSpeed : -Math.random() * particleSpeed,
+            velx: Math.random() > 0.5 ? Math.random() * particleSpeed : -Math.random() * particleSpeed,
+            type: Math.round(Math.random() * 2),
+            opacity: 1
+        };
+        particles.push(particle);
+    }
+
+
+}
+
+
+function StartScreen() {
+    if(started){return;}
+    for (var id in particles) {
+        
+        var particle = particles[id];
+        
+        UpdateParticleVelocity(particle);
+       
+        CheckParticleParticleCollision(particle);
+        CheckParticlePos(particle);
+    }
+    context.clearRect(0, 0, canvasWidth, canvasHeight);
+    context.fillStyle = "#fff"
+    context.fillRect(0, 0, canvasWidth, canvasHeight);
+    for(var id in particles){
+        var particle = particles[id];
+        currentPlayer.x = -canvasWidth/2;
+        currentPlayer.y = -canvasHeight/2;
+        DrawParticles(particle)
+    }
+    setTimeout(StartScreen, 16);
+}
+// End of Start Screen
 
 socket.on("get id from server", function (id) {
     playerId = id;
@@ -265,33 +414,6 @@ function end() {
 }
 
 
-// Update Canvas
-var canvas = document.createElement('canvas');
-canvas.width = document.body.scrollWidth + '';
-canvas.height = document.body.scrollHeight + '';
-canvasWidth = document.body.scrollWidth;
-canvasHeight = document.body.scrollHeight;
-
-var realCanvas = document.getElementById('screen');
-realCanvas.width = document.body.scrollWidth;
-realCanvas.height = document.body.scrollHeight;
-canvasWidth = document.body.scrollWidth;
-canvasHeight = document.body.scrollHeight;
-
-CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-    if (w < 2 * r) r = w / 2;
-    if (h < 2 * r) r = h / 2;
-    this.beginPath();
-    this.moveTo(x + r, y);
-    this.arcTo(x + w, y, x + w, y + h, r);
-    this.arcTo(x + w, y + h, x, y + h, r);
-    this.arcTo(x, y + h, x, y, r);
-    this.arcTo(x, y, x + w, y, r);
-    this.closePath();
-    return this;
-}
-
-var context = canvas.getContext('2d');
 
 setInterval(() => {
     socket.emit("update");
@@ -356,7 +478,7 @@ socket.on('state', function (data) {
         for (var id in data.particles) {
             var particle = data.particles[id];
             if (!inRange(particle)) { continue; }
-            DrawParticles(particle, id);
+            DrawParticles(particle);
         }
         DrawAnimatedParticles(data.animate.animatedParticles);
         context.globalAlpha = 1;
@@ -632,7 +754,7 @@ function DrawAnimatedParticles(particlesList) {
     }
 }
 
-function DrawParticles(particles, id) {
+function DrawParticles(particles) {
 
 
     if (particles.type == 0) {
