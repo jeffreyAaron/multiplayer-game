@@ -516,12 +516,12 @@ socket.on('state', function (data) {
             DrawLeaderBoard(leaders);
         }
         DrawLevel();
+        DrawPowerups(currentPlayer.bulletDamage, currentPlayer.bulletPenetration, currentPlayer.bulletSpeed, currentPlayer.reload, currentPlayer.movementSpeed)
     }
     else {
         ShowGameOverScreenAnim();
     }
     console.log(data);
-    DrawPowerups(currentPlayer.bulletDamage, currentPlayer.bulletPenetration, currentPlayer.bulletSpeed, currentPlayer.reload, currentPlayer.movementSpeed)
 
 });
 
