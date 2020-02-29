@@ -28,6 +28,8 @@ var bulletAnimationSpeed = 0.08;
 var particleAnimationSpeed = 0.08;
 var latency = 0;
 var levelUpAmount = 20;
+var bulletVelocity = 1.04;
+var bulletVelocityStop = 480;
 
 // Land Configuration
 var map = [
@@ -539,11 +541,18 @@ function CannonLaunch(data, socket) {
 }
 
 function UpdateBullets() {
+
     var deletelist = [];
     for (var id in bullets) {
         var bullet = bullets[id];
+        if (bullet.life > bulletVelocityStop) {
+        bullet.changex *= bulletVelocity;
+        bullet.changey *= bulletVelocity;
+        }
+       
         bullet.x += bullet.changex;
         bullet.y += bullet.changey;
+        
         bullet.life--;
         if (bullet.life < 0) {
             bullet.life = 0;
