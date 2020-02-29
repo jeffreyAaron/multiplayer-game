@@ -26,18 +26,21 @@ var leaderBoardCount = 10;
 var levelBarLength = 600;
 var level = 1;
 var oldLevel = 1;
-var levelIncreaseGrain = 10;
+var levelIncreaseGrain = 20;
 var pointsPerLevel = 3;
 var powerupoff = 0;
 var showpowerups = true;
 var img;
 var onScreenContext;
 var started = false;
+var particleSpeed = 0.5;
+var nozzleOff = 0;
+var nozzleOffStart = 4;
 
 window.onload = function () {
     img = document.getElementById("backgroundTile");
     onScreenContext = document.getElementById('screen').getContext('2d');
-    onScreenContext.imageSmoothingEnabled = false
+    
 }
 
 // Animation
@@ -61,7 +64,7 @@ var map = [
 // Player Specific Constants
 var autofire = false;
 var playerId = "";
-var points = 1110;
+var points = 0;
 var currentPlayer = {
     rot: 0,
     isAlive: true,
@@ -179,15 +182,21 @@ document.addEventListener("click", function (event) {
 });
 
 
+
 function FireCannon() {
+    nozzleOff = nozzleOffStart-1;
     if (!currentPlayer.isAlive) { return; }
     var bulletsToFire = [];
     if (Math.floor(currentPlayer.tankLevel) == 1) {
         bulletsToFire.push(movement.rot - 90 * Math.PI / 180);
-    } else if (Math.floor(currentPlayer.tankLevel) >= 2){
+    } else if (Math.floor(currentPlayer.tankLevel) == 2){
         bulletsToFire.push(movement.rot - 45 * Math.PI / 180);
         bulletsToFire.push(movement.rot- 135 * Math.PI / 180);
-    }
+    } else if (Math.floor(currentPlayer.tankLevel) >= 3){
+        bulletsToFire.push(movement.rot - (-33.33+90) * Math.PI / 180);
+        bulletsToFire.push(movement.rot - (33.33+90) * Math.PI / 180);
+        bulletsToFire.push(movement.rot - (33.333 * 1.5 + 180 + 45) * Math.PI / 180);
+    } 
     for(var id in bulletsToFire){
         var rot = bulletsToFire[id];
         var changey = bulletMultiplier * Math.sin(rot);
@@ -203,13 +212,43 @@ function FireCannon() {
     }
 }
 
+// Update Canvas
+var canvas = document.createElement('canvas');
+canvas.width = document.body.scrollWidth + '';
+canvas.height = document.body.scrollHeight + '';
+canvasWidth = document.body.scrollWidth;
+canvasHeight = document.body.scrollHeight;
+
+var realCanvas = document.getElementById('screen');
+realCanvas.width = document.body.scrollWidth;
+realCanvas.height = document.body.scrollHeight;
+canvasWidth = document.body.scrollWidth;
+canvasHeight = document.body.scrollHeight;
+
+CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    this.beginPath();
+    this.moveTo(x + r, y);
+    this.arcTo(x + w, y, x + w, y + h, r);
+    this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r);
+    this.arcTo(x, y, x + w, y, r);
+    this.closePath();
+    return this;
+}
+
+var context = canvas.getContext('2d');
+
+// Start Screen
 var text = document.getElementById("nameBox");
 var textDiv = document.getElementById("nameDiv");
 var textBtn = document.getElementById("nameBtn");
 var leaderboard = document.getElementById("leaderboard");
 var cns = document.getElementById("screen");
+
 leaderboard.style.display = "none";
-cns.style.display = "none";
+
 function StartGame (){
     leaderboard.style.display = "block";
     document.getElementById("flyer").style.display = "none";
@@ -219,6 +258,124 @@ function StartGame (){
     textDiv.style.display = "none";
     
 }
+
+StartScreen();
+
+var particles = [];
+SetupParticles(200);
+function CheckParticleParticleCollision(particle) {
+    for (var id in particles) {
+        var testonParticle = particles[id];
+        var testOn = testonParticle;
+        if (testonParticle == particle) { continue; }
+        var testER = particle;
+        var distx = Math.pow(Math.abs(testOn.x - testER.x), 2);
+        var disty = Math.pow(Math.abs(testOn.y - testER.y), 2);
+        var totalDist = Math.sqrt(distx + disty);
+        if (totalDist < (playerRadius + playerRadius * 3)) {
+            particle.velx = -particle.velx;
+            particle.vely = -particle.vely;
+        }
+
+    }
+
+}
+
+function CheckParticlePos(particle) {
+    if (particle.x > 0) {
+        particle.x = 0;
+        particle.velx = -particle.velx;
+        particle.vely = -particle.vely;
+    }
+    if (particle.x < -landWidth) {
+        particle.x = -landWidth;
+        particle.velx = -particle.velx;
+        particle.vely = -particle.vely;
+    }
+    if (particle.y > 0) {
+        particle.y = 0;
+        particle.velx = -particle.velx;
+        particle.vely = -particle.vely;
+    }
+    if (particle.y < -landHeight) {
+        particle.y = -landHeight;
+        particle.velx = -particle.velx;
+        particle.vely = -particle.vely;
+    }
+}
+
+function UpdateParticleVelocity(particle) {
+    particle.velx = particle.velx;
+    particle.vely = particle.vely;
+    particle.x += particle.velx;
+    particle.y += particle.vely;
+
+}
+
+function SetupParticles(count) {
+    var particlesData = [];
+    for (let index = 0; index < count; index++) {
+        var xpos, ypos;
+        var foundGood = false;
+        while (!foundGood) {
+
+            xpos = -Math.random() * landWidth;
+            ypos = -Math.random() * landHeight;
+            foundGood = true;
+            for (let Yindex = 0; Yindex < landHeight / tileSize; Yindex++) {
+                for (let Xindex = 0; Xindex < landWidth / tileSize; Xindex++) {
+                    if (map[Yindex][Xindex] == 1) {
+                        var blockx = Xindex * tileSize;
+                        var blocky = Yindex * tileSize;
+                        var playerx = -xpos;
+                        var playery = -ypos;
+
+                        if (playerx >= blockx && playerx <= blockx + tileSize && playery >= blocky && playery <= blocky + tileSize) {
+                            foundGood = false;
+
+                        }
+                    }
+                }
+            }
+        }
+        var particle = {
+            x: xpos,
+            y: ypos,
+            vely: Math.random() > 0.5 ? Math.random() * particleSpeed : -Math.random() * particleSpeed,
+            velx: Math.random() > 0.5 ? Math.random() * particleSpeed : -Math.random() * particleSpeed,
+            type: Math.round(Math.random() * 2),
+            opacity: 1
+        };
+        particles.push(particle);
+    }
+
+
+}
+
+
+function StartScreen() {
+    if(started){return;}
+    for (var id in particles) {
+        
+        var particle = particles[id];
+        
+        UpdateParticleVelocity(particle);
+       
+        CheckParticleParticleCollision(particle);
+        CheckParticlePos(particle);
+    }
+    context.clearRect(0, 0, canvasWidth, canvasHeight);
+    context.fillStyle = "#fff"
+    context.fillRect(0, 0, canvasWidth, canvasHeight);
+    for(var id in particles){
+        var particle = particles[id];
+        currentPlayer.x = -canvasWidth/2;
+        currentPlayer.y = -canvasHeight/2;
+        DrawParticles(particle)
+    }
+    setTimeout(StartScreen, 16);
+}
+// End of Start Screen
 
 socket.on("get id from server", function (id) {
     playerId = id;
@@ -265,42 +422,22 @@ function end() {
 }
 
 
-// Update Canvas
-var canvas = document.createElement('canvas');
-canvas.width = document.body.scrollWidth + '';
-canvas.height = document.body.scrollHeight + '';
-canvasWidth = document.body.scrollWidth;
-canvasHeight = document.body.scrollHeight;
 
-var realCanvas = document.getElementById('screen');
-realCanvas.width = document.body.scrollWidth;
-realCanvas.height = document.body.scrollHeight;
-canvasWidth = document.body.scrollWidth;
-canvasHeight = document.body.scrollHeight;
-
-CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-    if (w < 2 * r) r = w / 2;
-    if (h < 2 * r) r = h / 2;
-    this.beginPath();
-    this.moveTo(x + r, y);
-    this.arcTo(x + w, y, x + w, y + h, r);
-    this.arcTo(x + w, y + h, x, y + h, r);
-    this.arcTo(x, y + h, x, y, r);
-    this.arcTo(x, y, x + w, y, r);
-    this.closePath();
-    return this;
-}
-
-var context = canvas.getContext('2d');
-
-setInterval(() => {
+function Render() {
     socket.emit("update");
     socket.emit("get state");
-    if(canvas!=undefined){
-        onScreenContext.drawImage(canvas, 0, 0);
+    
+    
+    if(onScreenContext != undefined){
+    
+        if(canvas!=undefined){
+            onScreenContext.drawImage(canvas, 0, 0);
+        }
     }
-}, 1000 / 60);
+    requestAnimationFrame(Render);
+}
 
+requestAnimationFrame(Render);
 
 var leaderBoardTick = 0;
 var skippedFrames = 0;
@@ -310,6 +447,10 @@ socket.on('state', function (data) {
     if (Math.floor(currentPlayer.tankLevel) != Math.floor(oldLevel)){
         points += Math.round(Math.abs(currentPlayer.tankLevel-oldLevel)*pointsPerLevel);
         oldLevel = currentPlayer.tankLevel;
+    }
+    nozzleOff-= (nozzleOffStart-nozzleOff)/10 ;
+    if(nozzleOff < 0){
+        nozzleOff = 0;
     }
     if(!showpowerups){
         var on = 400;
@@ -356,7 +497,7 @@ socket.on('state', function (data) {
         for (var id in data.particles) {
             var particle = data.particles[id];
             if (!inRange(particle)) { continue; }
-            DrawParticles(particle, id);
+            DrawParticles(particle);
         }
         DrawAnimatedParticles(data.animate.animatedParticles);
         context.globalAlpha = 1;
@@ -417,6 +558,7 @@ function DrawLevel(){
     ctx.stroke();
 
     ctx.font = "30px Segoe UI";
+    context.fillStyle = "#333"
     ctx.fillText("Level: " + ~~level , 10, 30);
 }
 
@@ -469,14 +611,14 @@ function DrawPowerups(bulletDamage, bulletPenetration, bulletSpeed, reload, move
     var dist = 4;
     var width = 8;
     var height = 8;
-    
+    context.fillStyle = "#333"
     context.font = "15px Segoe UI";
-    context.fillText("Press [Q] to toggle powerups.", 10, y + yoff * 4+ 160 * ((powerupoff) / 500)+ 7.5);
+    context.fillText("Press [Q] to toggle powerups.", 10, y + yoff * 6+ (160+yoff*2.5) * ((powerupoff) / 500)+ 7.5);
     context.font = "20px Segoe UI";
     //context.fillText(points + " points", 10 + powerupoff, y+ yoff*5 + 7.5);
     context.fillText(points + " points", 10 , y  +yoff*5 + 160*((powerupoff)/500)+ 7.5);
     context.fillStyle = "white";
-    context.fillRect(5 + powerupoff, y-10, 260, yoff*4+25)
+    //context.fillRect(5 + powerupoff, y-10, 260, yoff*4+25)
     Drawbars(8, bulletDamage, context, x+powerupoff, y + yoff * 0, dist, width, height);
     Drawbars(8, bulletPenetration, context, x + powerupoff, y + yoff * 1, dist, width, height);
     Drawbars(8, bulletSpeed, context, x + powerupoff, y + yoff * 2, dist, width, height);
@@ -512,25 +654,33 @@ function DrawWeapon(player, id) {
         if (Math.floor(player.tankLevel) == 1){
             ctx.translate(canvasWidth / 2, canvasHeight / 2);
             ctx.rotate(player.rot);
-            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
-        } else if (Math.floor(player.tankLevel) >= 2){
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
+        } else if (Math.floor(player.tankLevel) == 2){
             ctx.translate(canvasWidth / 2, canvasHeight / 2);
             ctx.rotate(player.rot + (-45) * Math.PI / 180);
-            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
             ctx.rotate((90) * Math.PI / 180);
-            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
+        } else if (Math.floor(player.tankLevel) >= 3){
+            ctx.translate(canvasWidth / 2, canvasHeight / 2);
+            ctx.rotate(player.rot + (-33.333) * Math.PI / 180);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
+            ctx.rotate((66.666) * Math.PI / 180);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
+            ctx.rotate((33.333*1.5+90) * Math.PI / 180);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
         }
     } else {
         if (Math.floor(player.tankLevel) == 1) {
             ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
             ctx.rotate(player.rot);
-            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
-        } else if (Math.floor(player.tankLevel) >= 2) {
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
+        } else if (Math.floor(player.tankLevel) == 2) {
             ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
             ctx.rotate(player.rot - Math.PI + (-45) * 180 / Math.PI);
-            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
             ctx.rotate((90) * 180 / Math.PI);
-            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
         }
     }
     ctx.restore();
@@ -632,7 +782,7 @@ function DrawAnimatedParticles(particlesList) {
     }
 }
 
-function DrawParticles(particles, id) {
+function DrawParticles(particles) {
 
 
     if (particles.type == 0) {
