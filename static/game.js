@@ -34,6 +34,8 @@ var img;
 var onScreenContext;
 var started = false;
 var particleSpeed = 0.5;
+var nozzleOff = 0;
+var nozzleOffStart = 4;
 
 window.onload = function () {
     img = document.getElementById("backgroundTile");
@@ -180,7 +182,9 @@ document.addEventListener("click", function (event) {
 });
 
 
+
 function FireCannon() {
+    nozzleOff = nozzleOffStart-1;
     if (!currentPlayer.isAlive) { return; }
     var bulletsToFire = [];
     if (Math.floor(currentPlayer.tankLevel) == 1) {
@@ -433,6 +437,10 @@ socket.on('state', function (data) {
         points += Math.round(Math.abs(currentPlayer.tankLevel-oldLevel)*pointsPerLevel);
         oldLevel = currentPlayer.tankLevel;
     }
+    nozzleOff-= (nozzleOffStart-nozzleOff)/10 ;
+    if(nozzleOff < 0){
+        nozzleOff = 0;
+    }
     if(!showpowerups){
         var on = 400;
         
@@ -634,25 +642,25 @@ function DrawWeapon(player, id) {
         if (Math.floor(player.tankLevel) == 1){
             ctx.translate(canvasWidth / 2, canvasHeight / 2);
             ctx.rotate(player.rot);
-            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
         } else if (Math.floor(player.tankLevel) >= 2){
             ctx.translate(canvasWidth / 2, canvasHeight / 2);
             ctx.rotate(player.rot + (-45) * Math.PI / 180);
-            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
             ctx.rotate((90) * Math.PI / 180);
-            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
         }
     } else {
         if (Math.floor(player.tankLevel) == 1) {
             ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
             ctx.rotate(player.rot);
-            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
         } else if (Math.floor(player.tankLevel) >= 2) {
             ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
             ctx.rotate(player.rot - Math.PI + (-45) * 180 / Math.PI);
-            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
             ctx.rotate((90) * 180 / Math.PI);
-            ctx.fillRect(-10, 0, cannonWidth, cannonLength);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
         }
     }
     ctx.restore();
