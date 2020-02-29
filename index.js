@@ -28,7 +28,7 @@ var bulletAnimationSpeed = 0.08;
 var particleAnimationSpeed = 0.08;
 var latency = 0;
 var levelUpAmount = 20;
-var bulletVelocity = 1.04;
+var bulletVelocity = 1.01;
 var bulletVelocityStop = 480;
 
 // Land Configuration
@@ -208,7 +208,7 @@ io.on('connection', function (socket) {
 // Low Priority
 setInterval(function () {
     // Update State
-    UpdateBullets();
+    
     SetupParticles(particlesCount - particles.length);
     for (var id in particles) {
         var particle = particles[id];
@@ -224,7 +224,9 @@ setInterval(function () {
     Animate();
 }, 1000 / 30);
 
+// High Priority
 setInterval(function () {
+    UpdateBullets();
     CheckBulletCollision();
     CheckParticleCollision();
 }, 1000 / 60);
