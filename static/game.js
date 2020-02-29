@@ -547,6 +547,7 @@ function DrawLevel(){
     ctx.stroke();
 
     ctx.font = "30px Segoe UI";
+    context.fillStyle = "#333"
     ctx.fillText("Level: " + ~~level , 10, 30);
 }
 
@@ -599,14 +600,14 @@ function DrawPowerups(bulletDamage, bulletPenetration, bulletSpeed, reload, move
     var dist = 4;
     var width = 8;
     var height = 8;
-    
+    context.fillStyle = "#333"
     context.font = "15px Segoe UI";
-    context.fillText("Press [Q] to toggle powerups.", 10, y + yoff * 4+ 160 * ((powerupoff) / 500)+ 7.5);
+    context.fillText("Press [Q] to toggle powerups.", 10, y + yoff * 6+ (160+yoff*2.5) * ((powerupoff) / 500)+ 7.5);
     context.font = "20px Segoe UI";
     //context.fillText(points + " points", 10 + powerupoff, y+ yoff*5 + 7.5);
     context.fillText(points + " points", 10 , y  +yoff*5 + 160*((powerupoff)/500)+ 7.5);
     context.fillStyle = "white";
-    context.fillRect(5 + powerupoff, y-10, 260, yoff*4+25)
+    //context.fillRect(5 + powerupoff, y-10, 260, yoff*4+25)
     Drawbars(8, bulletDamage, context, x+powerupoff, y + yoff * 0, dist, width, height);
     Drawbars(8, bulletPenetration, context, x + powerupoff, y + yoff * 1, dist, width, height);
     Drawbars(8, bulletSpeed, context, x + powerupoff, y + yoff * 2, dist, width, height);
