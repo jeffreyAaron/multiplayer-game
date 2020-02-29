@@ -74,6 +74,7 @@ server.listen(process.env.PORT || 5000, function () {
 var players = {};
 var bullets = [];
 var particles = [];
+var ai = [];
 
 // Animation
 var animatedBullets = [];
@@ -84,6 +85,7 @@ var animatedParticles = [];
 init();
 function init() {
     SetupParticles(particlesCount);
+    SetupAi(1);
 }
 io.on('connection', function (socket) {
     socket.on('late', function (ms) {
@@ -247,6 +249,10 @@ function Animate() {
             animatedParticles.splice(animatedParticles.indexOf(particle), 1);
         }
     }
+}
+
+function SetupAi (count){
+
 }
 
 function SetupParticles(count) {
