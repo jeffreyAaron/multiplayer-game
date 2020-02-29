@@ -26,7 +26,7 @@ var leaderBoardCount = 10;
 var levelBarLength = 600;
 var level = 1;
 var oldLevel = 1;
-var levelIncreaseGrain = 10;
+var levelIncreaseGrain = 20;
 var pointsPerLevel = 3;
 var powerupoff = 0;
 var showpowerups = true;
@@ -40,7 +40,7 @@ var nozzleOffStart = 4;
 window.onload = function () {
     img = document.getElementById("backgroundTile");
     onScreenContext = document.getElementById('screen').getContext('2d');
-    onScreenContext.imageSmoothingEnabled = false
+    
 }
 
 // Animation
@@ -64,7 +64,7 @@ var map = [
 // Player Specific Constants
 var autofire = false;
 var playerId = "";
-var points = 1110;
+var points = 0;
 var currentPlayer = {
     rot: 0,
     isAlive: true,
@@ -189,10 +189,14 @@ function FireCannon() {
     var bulletsToFire = [];
     if (Math.floor(currentPlayer.tankLevel) == 1) {
         bulletsToFire.push(movement.rot - 90 * Math.PI / 180);
-    } else if (Math.floor(currentPlayer.tankLevel) >= 2){
+    } else if (Math.floor(currentPlayer.tankLevel) == 2){
         bulletsToFire.push(movement.rot - 45 * Math.PI / 180);
         bulletsToFire.push(movement.rot- 135 * Math.PI / 180);
-    }
+    } else if (Math.floor(currentPlayer.tankLevel) >= 3){
+        bulletsToFire.push(movement.rot - (-33.33+90) * Math.PI / 180);
+        bulletsToFire.push(movement.rot - (33.33+90) * Math.PI / 180);
+        bulletsToFire.push(movement.rot - (33.333 * 1.5 + 180 + 45) * Math.PI / 180);
+    } 
     for(var id in bulletsToFire){
         var rot = bulletsToFire[id];
         var changey = bulletMultiplier * Math.sin(rot);
@@ -419,14 +423,21 @@ function end() {
 
 
 
-setInterval(() => {
+function Render() {
     socket.emit("update");
     socket.emit("get state");
-    if(canvas!=undefined){
-        onScreenContext.drawImage(canvas, 0, 0);
+    
+    
+    if(onScreenContext != undefined){
+    
+        if(canvas!=undefined){
+            onScreenContext.drawImage(canvas, 0, 0);
+        }
     }
-}, 1000 / 60);
+    requestAnimationFrame(Render);
+}
 
+requestAnimationFrame(Render);
 
 var leaderBoardTick = 0;
 var skippedFrames = 0;
@@ -644,11 +655,19 @@ function DrawWeapon(player, id) {
             ctx.translate(canvasWidth / 2, canvasHeight / 2);
             ctx.rotate(player.rot);
             ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
-        } else if (Math.floor(player.tankLevel) >= 2){
+        } else if (Math.floor(player.tankLevel) == 2){
             ctx.translate(canvasWidth / 2, canvasHeight / 2);
             ctx.rotate(player.rot + (-45) * Math.PI / 180);
             ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
             ctx.rotate((90) * Math.PI / 180);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
+        } else if (Math.floor(player.tankLevel) >= 3){
+            ctx.translate(canvasWidth / 2, canvasHeight / 2);
+            ctx.rotate(player.rot + (-33.333) * Math.PI / 180);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
+            ctx.rotate((66.666) * Math.PI / 180);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
+            ctx.rotate((33.333*1.5+90) * Math.PI / 180);
             ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
         }
     } else {
@@ -656,7 +675,7 @@ function DrawWeapon(player, id) {
             ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
             ctx.rotate(player.rot);
             ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
-        } else if (Math.floor(player.tankLevel) >= 2) {
+        } else if (Math.floor(player.tankLevel) == 2) {
             ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
             ctx.rotate(player.rot - Math.PI + (-45) * 180 / Math.PI);
             ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);

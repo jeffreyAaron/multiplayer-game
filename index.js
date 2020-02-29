@@ -27,7 +27,7 @@ var particleSpeed = 0.3;
 var bulletAnimationSpeed = 0.08;
 var particleAnimationSpeed = 0.08;
 var latency = 0;
-var levelUpAmount = 3;
+var levelUpAmount = 20;
 
 // Land Configuration
 var map = [
@@ -319,7 +319,7 @@ function CreateNewPlayer(socket, name) {
         health: 100,
         score: 0,
         name: name,
-        tankLevel : 1.0,
+        tankLevel : 0.0,
         bulletDamage: 0, 
         bulletPenetration: 0,
         bulletSpeed:0,
