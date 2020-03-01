@@ -66,8 +66,37 @@ app.get('/', function (request, response) {
 // Starts the server.
 server.listen(process.env.PORT || 5000, function () {
     console.log('Starting server on port ' + (process.env.PORT || 5000));
-
+    
 });
+
+// AI
+
+var LEARNING_RATE = 0.1;
+var DISCOUNT = 0.95;
+var EPISODES = 25000;
+
+var DISCRETE_OS_SIZE = [20, 20]
+var DISCRETE_OS_WIN_SIZE = [landWidth / DISCRETE_OS_SIZE[0], landHeight / DISCRETE_OS_SIZE[0]]
+console.log(DISCRETE_OS_WIN_SIZE);
+
+var q_table = []
+
+
+
+function SetupAi (count){
+    for (let index = 0; index < DISCRETE_OS_SIZE[0]; index++) {
+        var table = []
+        for (let index = 0; index < DISCRETE_OS_SIZE[1]; index++) {
+            table.push([-1.75976075, - 0.43953685, - 1.61569219])
+    
+        }
+        q_table.push(table);
+    }
+    console.log(q_table);
+
+}
+
+// END AI
 
 
 // Game Logic
@@ -251,9 +280,7 @@ function Animate() {
     }
 }
 
-function SetupAi (count){
 
-}
 
 function SetupParticles(count) {
     var particlesData = [];
