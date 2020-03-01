@@ -75,26 +75,126 @@ var LEARNING_RATE = 0.1;
 var DISCOUNT = 0.95;
 var EPISODES = 25000;
 
-var DISCRETE_OS_SIZE = [20, 20]
-var DISCRETE_OS_WIN_SIZE = [landWidth / DISCRETE_OS_SIZE[0], landHeight / DISCRETE_OS_SIZE[0]]
+var DISCRETE_OS_SIZE = [landWidth/4, landHeight/4]
+var DISCRETE_OS_WIN_SIZE = [landWidth / DISCRETE_OS_SIZE[0], landHeight / DISCRETE_OS_SIZE[1]]
 console.log(DISCRETE_OS_WIN_SIZE);
 
 var q_table = []
 
+var discrete_state = [0,0]
 
+var reward = 0;
 
 function SetupAi (count){
-    for (let index = 0; index < DISCRETE_OS_SIZE[0]; index++) {
+    for (let index = 0; index <= DISCRETE_OS_SIZE[0]; index++) {
         var table = []
-        for (let index = 0; index < DISCRETE_OS_SIZE[1]; index++) {
-            table.push([-1.75976075, - 0.43953685, - 1.61569219])
+        for (let index = 0; index <= DISCRETE_OS_SIZE[1]; index++) {
+            table.push([ -Math.random() * 2, -Math.random() * 2, -Math.random() * 2, -Math.random() * 2, -Math.random() * 2])
     
         }
         q_table.push(table);
     }
-    console.log(q_table);
-
+    //console.log(q_table);
+    var aiId = Math.random+'';
+    ai = aiId;
+    CreateNewPlayer({id: aiId}, "AI", true)
+    updateAi();
 }
+
+function get_discrete_state(x, y) {
+    
+    
+    var stateX = -x / DISCRETE_OS_WIN_SIZE[0];
+    var stateY = -y / DISCRETE_OS_WIN_SIZE[1];
+
+    return [parseInt(stateX), parseInt(stateY)]
+}
+
+function argMax(array) {
+    //console.log(array)
+    return array.map((x, i) => [x, i]).reduce((r, a) => (a[0] > r[0] ? a : r))[1];
+}
+
+var train = 0;
+var trainAmt = 100000;
+
+function updateAi (){
+    train++;
+    // AI Portion
+    var id = ai;
+    //console.log(discrete_state[0])
+    var action = 0;
+    //console.log(action);
+    if(Math.random() >= 0.5){
+        action = argMax(q_table[discrete_state[0]][discrete_state[1]]);
+    }else{
+        action = Math.round(Math.random()*3)
+    }
+
+    //console.log(q_table[discrete_state[0]][discrete_state[1]]);
+
+    var moves = {
+        up: (action == 0) ? true : false,
+        down: (action == 1) ? true : false,
+        left: (action == 2) ? true : false,
+        right: (action == 3) ? true : false,
+        rot: (action == 4) ? players[ai].rot + 10 * Math.PI/180 : players[ai].rot,
+    }
+    //console.log(action);
+    
+    //for (let index = 0; index < 30; index++) {
+        movementAi(id, moves);
+        
+    //}
+        
+    
+
+    reward = 0;
+    
+    reward += -1 +  players[id].score;
+    var player = players[id] || { x: 0, y: 0, velx: 0, vely: 0 };
+    var resetTo = {
+        x: player.x,
+        y: player.y,
+        changex: player.velx,
+        changey: player.vely
+    };
+    // Velocity
+
+    UpdateVelocity({ id: id });
+    CheckPlayerCollision(resetTo, { id: id });
+    CheckWallCollision(resetTo, { id: id });
+    CheckPos({ id: id });
+    UpdatePlayerLevel({ id: id });
+
+    console.log(reward)
+
+    var new_discrete_state = get_discrete_state(players[ai].x, players[ai].y);
+
+    var max_future_q = q_table[new_discrete_state[0]][new_discrete_state[1]].reduce(function (a, b) {
+        return Math.max(a, b);
+    });
+    //var max_future_q = Math.max(q_table[new_discrete_state[0]][new_discrete_state[1]]);
+    
+    var current_q = q_table[discrete_state[0]][discrete_state[1]][action];
+
+    var new_q = (1 - LEARNING_RATE) * current_q + LEARNING_RATE * (reward + DISCOUNT * max_future_q)
+
+    q_table[discrete_state[0]][discrete_state[1]][action] = new_q;
+
+    discrete_state = new_discrete_state
+    if(train<trainAmt){
+        setTimeout(updateAi, 0);
+    }else{
+        setTimeout(updateAi, 16);
+    }
+}
+
+function movementAi(id, data){
+    
+    UpdateMovement(data, {id: id});
+}
+
 
 // END AI
 
@@ -103,7 +203,7 @@ function SetupAi (count){
 var players = {};
 var bullets = [];
 var particles = [];
-var ai = [];
+var ai;
 
 // Animation
 var animatedBullets = [];
@@ -121,7 +221,7 @@ io.on('connection', function (socket) {
         latency = ms / (1000 / 60);
     });
     socket.on('new player', function (name) {
-        CreateNewPlayer(socket, name);
+        CreateNewPlayer(socket, name, false);
 
         socket.emit("get id from server", socket.id);
     });
@@ -321,7 +421,7 @@ function SetupParticles(count) {
 
 
 }
-function CreateNewPlayer(socket, name) {
+function CreateNewPlayer(socket, name, isAI) {
     var xpos, ypos;
     var foundGood = false;
     while (!foundGood) {
@@ -344,6 +444,10 @@ function CreateNewPlayer(socket, name) {
                 }
             }
         }
+    }
+
+    if(isAI){
+        discrete_state = get_discrete_state(xpos, ypos)
     }
 
     players[socket.id] = {
@@ -532,6 +636,9 @@ function CheckWallCollision(resetData, socket) {
                     players[socket.id].y = resetData.y;
                     players[socket.id].velx = 0;
                     players[socket.id].vely = 0;
+                    if(socket.id == ai){
+                        reward = -10;
+                    }
 
                 }
             }
@@ -605,15 +712,27 @@ function CheckPos(socket) {
     var player = players[socket.id] || { x: 0, y: 0 };
     if (player.x > 0) {
         player.x = 0;
+        if (socket.id = ai) {
+            reward = -10;
+        }
     }
     if (player.x < -landWidth) {
         player.x = -landWidth;
+        if (socket.id = ai) {
+            reward = -10;
+        }
     }
     if (player.y > 0) {
         player.y = 0;
+        if (socket.id = ai) {
+            reward = -10;
+        }
     }
     if (player.y < -landHeight) {
         player.y = -landHeight;
+        if (socket.id == ai) {
+            reward = -10;
+        }
     }
 }
 

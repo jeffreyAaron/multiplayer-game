@@ -64,7 +64,7 @@ var map = [
 // Player Specific Constants
 var autofire = false;
 var playerId = "";
-var points = 1000;
+var points = 0;
 var currentPlayer = {
     rot: 0,
     isAlive: true,
