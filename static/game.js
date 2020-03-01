@@ -683,6 +683,14 @@ function DrawWeapon(player, id) {
             ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
             ctx.rotate((90) * 180 / Math.PI);
             ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
+        } else if (Math.floor(player.tankLevel) >= 3) {
+            ctx.translate(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y);
+            ctx.rotate(player.rot + (-33.333) * Math.PI / 180);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
+            ctx.rotate((66.666) * Math.PI / 180);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
+            ctx.rotate((33.333 * 1.5 + 90) * Math.PI / 180);
+            ctx.fillRect(-10, 0, cannonWidth, cannonLength - nozzleOff);
         }
         nozzleOff = newn;
     }

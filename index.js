@@ -71,11 +71,11 @@ server.listen(process.env.PORT || 5000, function () {
 
 // AI
 
-var LEARNING_RATE = 0.1;
+var LEARNING_RATE = 0.2;
 var DISCOUNT = 0.95;
 var EPISODES = 25000;
 
-var DISCRETE_OS_SIZE = [landWidth/4, landHeight/4]
+var DISCRETE_OS_SIZE = [landWidth, landHeight]
 var DISCRETE_OS_WIN_SIZE = [landWidth / DISCRETE_OS_SIZE[0], landHeight / DISCRETE_OS_SIZE[1]]
 console.log(DISCRETE_OS_WIN_SIZE);
 
@@ -84,6 +84,7 @@ var q_table = []
 var discrete_state = [0,0]
 
 var reward = 0;
+
 
 function SetupAi (count){
     for (let index = 0; index <= DISCRETE_OS_SIZE[0]; index++) {
@@ -125,10 +126,10 @@ function updateAi (){
     //console.log(discrete_state[0])
     var action = 0;
     //console.log(action);
-    if(Math.random() >= 0.5){
+    if(Math.random()>0.5){
         action = argMax(q_table[discrete_state[0]][discrete_state[1]]);
     }else{
-        action = Math.round(Math.random()*3)
+        action = Math.round(Math.random()*5)
     }
 
     //console.log(q_table[discrete_state[0]][discrete_state[1]]);
@@ -142,16 +143,16 @@ function updateAi (){
     }
     //console.log(action);
     
-    //for (let index = 0; index < 30; index++) {
+    for (let index = 0; index < 10; index++) {
         movementAi(id, moves);
         
-    //}
+    }
         
     
 
     reward = 0;
     
-    reward += -1 +  players[id].score;
+    
     var player = players[id] || { x: 0, y: 0, velx: 0, vely: 0 };
     var resetTo = {
         x: player.x,
@@ -183,6 +184,10 @@ function updateAi (){
     q_table[discrete_state[0]][discrete_state[1]][action] = new_q;
 
     discrete_state = new_discrete_state
+    if(players[ai].tankLevel == 3){
+        console.log(q_table);
+        return;
+    }
     if(train<trainAmt){
         setTimeout(updateAi, 0);
     }else{
@@ -485,6 +490,9 @@ function CheckParticleCollision() {
                 players[id].score += 1;
                 if (players[id].health >= 100) {
                     players[id].health = 100;
+                }
+                if(id == ai){
+                    reward += -1 + players[id].score * 5;
                 }
                 animatedParticles.push(bullet);
                 particles.splice(particles.indexOf(bullet), 1);
