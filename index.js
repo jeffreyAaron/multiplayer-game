@@ -107,9 +107,10 @@ function getNearestParticleDist(id) {
 
 var neat;
 
-function SetupAi (count){
+neat = new NEAT(config);
+
+function SetupAi (){
     
-    neat = new NEAT(config);
     
     for (let i = 0; i < population; i++){
         var aiId = i;
@@ -137,7 +138,7 @@ function updateAi (){
 
     let desicions = neat.getDesicions();
 
-    console.log(desicions);
+    //console.log(desicions);
     
 
     for (var index in ai) {
@@ -175,8 +176,14 @@ function updateAi (){
         CheckPos({ id: id });
         UpdatePlayerLevel({ id: id });
         
-        if (playerAI.score > 100){
+        if (playerAI.score > 10){
             finish = true;
+        }
+
+        for (let i = 0; i < population; i++) {
+            neat.setFitness(players[ai[i]].score, i);
+
+
         }
         
     }
@@ -188,8 +195,10 @@ function updateAi (){
             
 
         }
-        SetupAi()
+        finish = false;
         neat.doGen();
+        console.log(neat.bestCreature());
+        SetupAi()
         return;
     }
         
