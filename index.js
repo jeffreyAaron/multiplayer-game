@@ -75,7 +75,7 @@ var LEARNING_RATE = 0.2;
 var DISCOUNT = 0.95;
 var EPISODES = 25000;
 
-var DISCRETE_OS_SIZE = [landWidth, landHeight]
+var DISCRETE_OS_SIZE = [landWidth/4, landHeight/4]
 var DISCRETE_OS_WIN_SIZE = [landWidth / DISCRETE_OS_SIZE[0], landHeight / DISCRETE_OS_SIZE[1]]
 console.log(DISCRETE_OS_WIN_SIZE);
 
@@ -143,7 +143,7 @@ function updateAi (){
     }
     //console.log(action);
     
-    for (let index = 0; index < 10; index++) {
+    for (let index = 0; index < 1; index++) {
         movementAi(id, moves);
         
     }
@@ -189,7 +189,7 @@ function updateAi (){
         return;
     }
     if(train<trainAmt){
-        setTimeout(updateAi, 0);
+        setTimeout(updateAi, 16);
     }else{
         setTimeout(updateAi, 16);
     }
