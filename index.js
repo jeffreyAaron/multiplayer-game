@@ -77,10 +77,11 @@ let { NEAT, activation, crossover, mutate } = require('neat_net-js');
 
 let config = {
     model: [
-        { nodeCount: 2, type: "input" },
+        { nodeCount: 4, type: "input" },
+        { nodeCount: 8, type: "hidden", activationfunc: activation.RELU },
         { nodeCount: 4, type: "output", activationfunc: activation.RELU }
     ],
-    mutationRate: 0.05,
+    mutationRate: 0.1,
     crossoverMethod: crossover.RANDOM,
     mutationMethod: mutate.RANDOM,
     populationSize: population
@@ -118,19 +119,22 @@ function SetupAi (){
         ai[i] = aiId;
     }
     
-    updateAi();
+    
+    updateAi(true);
+    
 }
 
 var finish = false;
+var timeout = 4;
 
-function updateAi (){
+function updateAi(fast){
     for (var index in ai) {
         
         
         // AI Portion
         var id = ai[index];
 
-        neat.setInputs([getNearestParticleDist(id).xoff, getNearestParticleDist(id).yoff], id);
+        neat.setInputs([getNearestParticleDist(id).xoff, getNearestParticleDist(id).yoff, players[id].velx, players[id].vely], id);
         
     }
 
@@ -176,7 +180,8 @@ function updateAi (){
         CheckPos({ id: id });
         UpdatePlayerLevel({ id: id });
         
-        if (playerAI.score > 10){
+        if (playerAI.score >= timeout){
+            timeout++;
             finish = true;
         }
 
@@ -191,18 +196,23 @@ function updateAi (){
     if (finish) {
         
         for (let i = 0; i < population; i++) {
-            neat.setFitness(players[ai[i]].score, i);
+            neat.setFitness(players[ai[i]].score , i);
             
 
         }
         finish = false;
         neat.doGen();
-        console.log(neat.bestCreature());
+        console.log(players[ai[neat.bestCreature()]].score);
         SetupAi()
         return;
     }
+
+    if (!fast){
         
-    setTimeout(updateAi, 16);
+        setTimeout(updateAi, 0);
+    }else{
+        setTimeout(updateAi, 0);
+    }
         
     }
     
