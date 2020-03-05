@@ -71,17 +71,16 @@ server.listen(process.env.PORT || 5000, function () {
 
 // AI
 
-let population = 100;
+let population = 200;
 
 let { NEAT, activation, crossover, mutate } = require('neat_net-js');
 
 let config = {
     model: [
-        { nodeCount: 4, type: "input" },
-        { nodeCount: 8, type: "hidden", activationfunc: activation.RELU },
+        { nodeCount: 5, type: "input" },
         { nodeCount: 4, type: "output", activationfunc: activation.RELU }
     ],
-    mutationRate: 0.1,
+    mutationRate: 0.05,
     crossoverMethod: crossover.RANDOM,
     mutationMethod: mutate.RANDOM,
     populationSize: population
@@ -134,7 +133,7 @@ function updateAi(fast){
         // AI Portion
         var id = ai[index];
 
-        neat.setInputs([getNearestParticleDist(id).xoff, getNearestParticleDist(id).yoff, players[id].velx, players[id].vely], id);
+        neat.setInputs([getNearestParticleDist(id).xoff, getNearestParticleDist(id).yoff, players[id].velx, players[id].vely, players[id].health], id);
         
     }
 
