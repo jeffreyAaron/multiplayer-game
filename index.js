@@ -208,9 +208,9 @@ function updateAi(fast){
 
     if (!fast){
         
-        setTimeout(updateAi, 0);
+        setTimeout(updateAi, 16);
     }else{
-        setTimeout(updateAi, 0);
+        setTimeout(updateAi, 16);
     }
         
     }
