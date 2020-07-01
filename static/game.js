@@ -397,7 +397,9 @@ var hasMoved = false;
 setInterval(function () {
     if (!started) { return; }
     if (currentPlayer.isAlive) {
-        socket.emit('movement', movement);
+        if (movement.left || movement.right || movement.up || movement.down || hasMoved){
+            socket.emit('movement', movement);
+        }
 
     }
 }, 1000 / 60);

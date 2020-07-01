@@ -232,7 +232,7 @@ setInterval(function () {
     CheckBulletWallCollision();
     // Animation
     Animate();
-}, 1000 / 30);
+}, 1000 / 60);
 
 
 function Animate() {
@@ -633,19 +633,19 @@ function UpdateParticleVelocity(particle) {
 function UpdateMovement(data, socket) {
     var player = players[socket.id] || {};
     if (data.left) {
-        player.x += playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency/8);
+        player.x += playerMoveSpeed;
         player.velx += playerInitVelocity ;
     }
     if (data.up) {
-        player.y += playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
+        player.y += playerMoveSpeed;
         player.vely += playerInitVelocity ;
     }
     if (data.right) {
-        player.x -= playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
+        player.x -= playerMoveSpeed;
         player.velx -= playerInitVelocity ;
     }
     if (data.down) {
-        player.y -= playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
+        player.y -= playerMoveSpeed;
         player.vely -= playerInitVelocity ;
     }
     player.rot = data.rot;
