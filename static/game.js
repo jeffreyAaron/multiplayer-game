@@ -434,7 +434,7 @@ function end() {
 
 
 function Render() {
-    socket.emit("update");
+    //socket.emit("update");
     socket.emit("get state");
     
     
@@ -444,10 +444,12 @@ function Render() {
             onScreenContext.drawImage(canvas, 0, 0);
         }
     }
-    requestAnimationFrame(Render);
+    
 }
 
-requestAnimationFrame(Render);
+setInterval(() => {
+    requestAnimationFrame(Render);
+}, 1000/30);
 
 var leaderBoardTick = 0;
 var skippedFrames = 0;

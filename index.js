@@ -117,25 +117,6 @@ io.on('connection', function (socket) {
         UpdateMovement(data, socket);
 
     });
-    socket.on('update', function () {
-        var player = players[socket.id] || { x: 0, y: 0, velx: 0, vely: 0 };
-        var resetTo = {
-            x: player.x,
-            y: player.y,
-            changex: player.velx,
-            changey: player.vely
-        };
-        // Velocity
-
-        UpdateVelocity(socket);
-        CheckPlayerCollision(resetTo, socket);
-        CheckWallCollision(resetTo, socket);
-        CheckPos(socket);
-        UpdatePlayerLevel(socket);
-
-
-
-    });
     socket.on('cannon', function (data) {
         // CannonLaunch
         CannonLaunch(data, socket);
@@ -154,7 +135,7 @@ io.on('connection', function (socket) {
         }
         leaders.sort((a, b) => b.score - a.score);
         // Returns State To Player
-        io.sockets.compress(true).emit('state', {
+        io.sockets.emit('state', {
             players: players,
             bullets: bullets,
             particles: particles,
@@ -217,10 +198,27 @@ io.on('connection', function (socket) {
     });
 });
 
-// Low Priority
+// High Priority
 setInterval(function () {
-    // Update State
-    
+    for(var id in players){
+        var player = players[id] || { x: 0, y: 0, velx: 0, vely: 0 };
+        var resetTo = {
+            x: player.x,
+            y: player.y,
+            changex: player.velx,
+            changey: player.vely
+        };
+        // Velocity
+        var socket = {id: id}
+        UpdateVelocity(socket);
+        CheckPlayerCollision(resetTo, socket);
+        CheckWallCollision(resetTo, socket);
+        CheckPos(socket);
+        UpdatePlayerLevel(socket);
+    }
+    UpdateBullets();
+    CheckBulletCollision();
+    CheckParticleCollision();
     SetupParticles(particlesCount - particles.length);
     for (var id in particles) {
         var particle = particles[id];
@@ -235,13 +233,6 @@ setInterval(function () {
     // Animation
     Animate();
 }, 1000 / 30);
-
-// High Priority
-setInterval(function () {
-    UpdateBullets();
-    CheckBulletCollision();
-    CheckParticleCollision();
-}, 1000 / 60);
 
 
 function Animate() {
