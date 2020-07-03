@@ -114,7 +114,7 @@ io.on('connection', function (socket) {
             changex: player.velx,
             changey: player.vely
         };
-        UpdateMovement(data, socket);
+        UpdateMovementData(data, socket);
 
     });
     socket.on('cannon', function (data) {
@@ -227,7 +227,8 @@ setInterval(function () {
 setInterval(function () {
     
     for (var id in players) {
-        UpdatePlayerLevel({ id: id });
+        var socket = { id: id }
+        UpdatePlayerLevel(socket);
         var player = players[id] || { x: 0, y: 0, velx: 0, vely: 0 };
         var resetTo = {
             x: player.x,
@@ -236,7 +237,8 @@ setInterval(function () {
             changey: player.vely
         };
         // Velocity
-        var socket = { id: id }
+        
+        UpdateMovement(socket);
         UpdateVelocity(socket);
         CheckPlayerCollision(resetTo, socket);
         CheckWallCollision(resetTo, socket);
@@ -340,6 +342,11 @@ function CreateNewPlayer(socket, name) {
         vely: 0,
         x: xpos,
         y: ypos,
+        left: false,
+        right: false,
+        up: false,
+        down: false,
+        rot: 0,
         health: 100,
         score: 0,
         name: name,
@@ -643,23 +650,32 @@ function UpdateParticleVelocity(particle) {
 
 }
 
-function UpdateMovement(data, socket) {
+function UpdateMovementData(data, socket) {
     var player = players[socket.id] || {};
-    if (data.left) {
+    player.left = data.left;
+    player.up = data.up;
+    player.right = data.right;
+    player.down = data.down;
+    player.rot = data.rot;
+}
+
+function UpdateMovement(socket) {
+    var player = players[socket.id] || {};
+    if (player.left) {
         player.x += playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
         player.velx += playerInitVelocity;
     }
-    if (data.up) {
+    if (player.up) {
         player.y += playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
         player.vely += playerInitVelocity;
     }
-    if (data.right) {
+    if (player.right) {
         player.x -= playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
         player.velx -= playerInitVelocity;
     }
-    if (data.down) {
+    if (player.down) {
         player.y -= playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
         player.vely -= playerInitVelocity;
     }
-    player.rot = data.rot;
+    //player.rot = data.rot;
 }
