@@ -94,7 +94,7 @@ var movement = {
     left: false,
     right: false
 }
-var wasKeyDown = false;
+var wasKeyDown = 0;
 document.addEventListener('keydown', function (event) {
     
     hasMoved = false;
@@ -126,14 +126,14 @@ document.addEventListener('keydown', function (event) {
             break;
     }
     if (!started) { return; }
-    if (wasKeyDown) { return; }
+    if (wasKeyDown == event.keyCode) { return; }
     if (currentPlayer.isAlive) {
 
         socket.emit('movement', movement);
-        console.log('Moved');
+        //console.log('Moved');
 
     }
-    wasKeyDown = true;
+    wasKeyDown = event.keyCode;
 });
 document.addEventListener('keyup', function (event) {
     hasMoved = true;
@@ -141,35 +141,35 @@ document.addEventListener('keyup', function (event) {
     switch (event.keyCode) {
         case 65: // A
             movement.left = false;
-            wasKeyDown = false;
+            wasKeyDown = 0;
             break;
         case 37: // A
             movement.left = false;
-            wasKeyDown = false;
+            wasKeyDown = 0;
             break;
         case 87: // W
             movement.up = false;
-            wasKeyDown = false;
+            wasKeyDown = 0;
             break;
         case 38: // W
             movement.up = false;
-            wasKeyDown = false;
+            wasKeyDown = 0;
             break;
         case 68: // D
             movement.right = false;
-            wasKeyDown = false;
+            wasKeyDown = 0;
             break;
         case 39: // D
             movement.right = false;
-            wasKeyDown = false;
+            wasKeyDown = 0;
             break;
         case 83: // S
             movement.down = false;
-            wasKeyDown = false;
+            wasKeyDown = 0;
             break;
         case 40: // S
             movement.down = false;
-            wasKeyDown = false;
+            wasKeyDown = 0;
             break;
         case 69: // E
             autofire = !autofire;
@@ -217,7 +217,7 @@ document.addEventListener('keyup', function (event) {
     if (currentPlayer.isAlive) {
 
         socket.emit('movement', movement);
-        console.log('Moved');
+        //console.log('Moved');
 
     }
 });
@@ -233,7 +233,7 @@ document.addEventListener("mousemove", function (event) {
             if (currentPlayer.isAlive) {
 
                 socket.emit('movement', movement);
-                console.log('Moved');
+                //console.log('Moved');
 
             }
     }
