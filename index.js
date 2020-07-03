@@ -216,7 +216,7 @@ setInterval(function () {
         leaderboard: leaders,
 
         animate: {
-            animatedBullets: animatedBullets,
+            
             animatedParticles: animatedParticles
         },
         time: time
@@ -369,7 +369,7 @@ function CheckParticleCollision() {
                 if (players[id].health >= 100) {
                     players[id].health = 100;
                 }
-                //animatedParticles.push(bullet);
+                animatedParticles.push(bullet);
                 particles.splice(particles.indexOf(bullet), 1);
             }
         }
@@ -394,7 +394,7 @@ function CheckBulletCollision() {
                     players[id].isAlive = false;
                     players[id].health = 0;
                 }
-                animatedBullets.push(bullet);
+                //animatedBullets.push(bullet);
                 bullets.splice(bullets.indexOf(bullet), 1);
             }
         }
@@ -411,7 +411,7 @@ function CheckParticleBulletCollision(particle) {
         var disty = Math.pow(Math.abs(testOn.y - bullet.y), 2);
         var totalDist = Math.sqrt(distx + disty);
         if (totalDist < (playerRadius + cannonWidth) / 2) {
-            animatedBullets.push(bullet);
+            //animatedBullets.push(bullet);
             animatedParticles.push(particle);
             particles.splice(particles.indexOf(particle), 1);
             bullets.splice(bullets.indexOf(bullet), 1);
@@ -539,7 +539,7 @@ function CheckBulletWallCollision() {
                     //console.log("B " +blockx + "  " +blocky);
                     //console.log(playerx + "  " + playery);
                     if (playerx >= blockx && playerx <= blockx + tileSize && playery >= blocky && playery <= blocky + tileSize) {
-                        animatedBullets.push(bullet);
+                        //animatedBullets.push(bullet);
                         bullets.splice(bullets.indexOf(bullet), 1);
 
                     }
@@ -581,7 +581,7 @@ function UpdateBullets() {
             deletelist.push(bullet);
         }
     }
-    animatedBullets.push(deletelist);
+    //animatedBullets.push(deletelist);
     for (var id in deletelist) {
         var deleted = bullets[id];
         bullets.splice(bullets.indexOf(deleted), 1);
