@@ -36,7 +36,7 @@ var started = false;
 var particleSpeed = 0.5;
 var nozzleOff = 0;
 var nozzleOffStart = 4;
-var currentData;
+var currentData={player: null};
 
 window.onload = function () {
     img = document.getElementById("backgroundTile");
@@ -102,13 +102,25 @@ document.addEventListener('keydown', function (event) {
         case 65: // A
             movement.left = true;
             break;
+        case 37: // A
+            movement.left = true;
+            break;
         case 87: // W
+            movement.up = true;
+            break;
+        case 38: // W
             movement.up = true;
             break;
         case 68: // D
             movement.right = true;
             break;
+        case 39: // D
+            movement.right = true;
+            break;
         case 83: // S
+            movement.down = true;
+            break;
+        case 40: // S
             movement.down = true;
             break;
     }
@@ -120,18 +132,29 @@ document.addEventListener('keyup', function (event) {
         case 65: // A
             movement.left = false;
             break;
+        case 37: // A
+            movement.left = false;
+            break;
         case 87: // W
+            movement.up = false;
+            break;
+        case 38: // W
             movement.up = false;
             break;
         case 68: // D
             movement.right = false;
             break;
+        case 39: // D
+            movement.right = false;
+            break;
         case 83: // S
+            movement.down = false;
+            break;
+        case 40: // S
             movement.down = false;
             break;
         case 69: // E
             autofire = !autofire;
-            break;
         case 49: // 1
             if (points > 0 && currentPlayer.bulletDamage < 8){
                 socket.emit("add to bulletDamage");
@@ -443,7 +466,9 @@ function Render() {
         points = 0;
     }
     if (started) {
+    
     currentPlayer = data.players[playerId] || { x: 0, y: 0 };
+    
     if (Math.floor(currentPlayer.tankLevel) != Math.floor(oldLevel)) {
         points += Math.round(Math.abs(currentPlayer.tankLevel - oldLevel) * pointsPerLevel);
         oldLevel = currentPlayer.tankLevel;
@@ -540,11 +565,15 @@ setInterval(() => {
 var leaderBoardTick = 0;
 var skippedFrames = 0;
 socket.on('state', function (data) {
-    currentData = data;
+    currentData.leaderboard = data.leaderboard;
+    currentData.particles = data.particles;
+    currentData.animate = data.animate;
+    currentData.time = data.time;
 });
 
-socket.on('playerState', function (data) {
-    currentData.players = data;
+socket.on('subState', function (data) {
+    currentData.players = data[0];
+    currentData.bullets = data[1];
 });
 
 
@@ -588,7 +617,7 @@ function DrawLevel(){
 function DrawMap(){
     var ctx = context;
     ctx.save()
-    ctx.translate(canvasWidth, canvasHeight)
+    ctx.translate(canvasWidth, canvasHeight);
     ctx.fillText("Levesl: ", 10, 30);
 
     ctx.restore();
@@ -757,16 +786,23 @@ function DrawPlayer(player, id) {
 }
 
 function DrawBullets(bullet, id) {
+    //console.log(bullet)
     var x = canvasWidth / 2 + currentPlayer.x - bullet.x;
     var y = canvasHeight / 2 + currentPlayer.y - bullet.y
     if (x <= -20 || x >= canvasWidth + 20 || y >= 20 || y <= -canvasHeight - 20) {
 
         //return;
-    
+        
         context.beginPath();
-        context.fillStyle = '#777';
+        if (bullet.playerId === playerId) {
+            context.fillStyle = "#4287f5";
+        } else {
+            context.fillStyle = "#eb4034";
+        }
         context.arc(x, y, cannonWidth / 2, 0, 2 * Math.PI);
         context.fill();
+        //context.beginPath();
+        
     }
 }
 
@@ -780,7 +816,11 @@ function DrawAnimatedBullets(bullets) {
         
         context.globalAlpha = bullet.opacity;
         context.beginPath();
-        context.fillStyle = '#777';
+            if (bullet.playerId === playerId) {
+                context.fillStyle = "#4287f5";
+            } else {
+                context.fillStyle = "#eb4034";
+            }
         context.arc(x, y, cannonWidth / 2, 0, 2 * Math.PI);
         context.fill();
         }
