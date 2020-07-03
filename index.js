@@ -24,8 +24,8 @@ var particleHealthGain = 5;
 var particlesCount = 200;
 var leaderBoardCount = 10;
 var particleSpeed = 0.3;
-var bulletAnimationSpeed = 0.08;
-var particleAnimationSpeed = 0.08;
+var bulletAnimationSpeed = 1;
+var particleAnimationSpeed = 0.3;
 var latency = 0;
 var levelUpAmount = 20;
 var bulletVelocity = 1.01;
@@ -222,7 +222,7 @@ setInterval(function () {
         time: time
     });
 
-}, 1000 / 20);
+}, 1000 / 10);
 
 setInterval(function () {
     UpdateBullets();
