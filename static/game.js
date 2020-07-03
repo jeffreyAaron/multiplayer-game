@@ -94,9 +94,10 @@ var movement = {
     left: false,
     right: false
 }
-
+var wasKeyDown = false;
 document.addEventListener('keydown', function (event) {
-    hasMoved = true;
+    
+    hasMoved = false;
     if (!started) { return; }
     switch (event.keyCode) {
         case 65: // A
@@ -124,6 +125,15 @@ document.addEventListener('keydown', function (event) {
             movement.down = true;
             break;
     }
+    if (!started) { return; }
+    if (wasKeyDown) { return; }
+    if (currentPlayer.isAlive) {
+
+        socket.emit('movement', movement);
+        console.log('Moved');
+
+    }
+    wasKeyDown = true;
 });
 document.addEventListener('keyup', function (event) {
     hasMoved = true;
@@ -131,27 +141,35 @@ document.addEventListener('keyup', function (event) {
     switch (event.keyCode) {
         case 65: // A
             movement.left = false;
+            wasKeyDown = false;
             break;
         case 37: // A
             movement.left = false;
+            wasKeyDown = false;
             break;
         case 87: // W
             movement.up = false;
+            wasKeyDown = false;
             break;
         case 38: // W
             movement.up = false;
+            wasKeyDown = false;
             break;
         case 68: // D
             movement.right = false;
+            wasKeyDown = false;
             break;
         case 39: // D
             movement.right = false;
+            wasKeyDown = false;
             break;
         case 83: // S
             movement.down = false;
+            wasKeyDown = false;
             break;
         case 40: // S
             movement.down = false;
+            wasKeyDown = false;
             break;
         case 69: // E
             autofire = !autofire;
@@ -194,11 +212,30 @@ document.addEventListener('keyup', function (event) {
             showpowerups = !showpowerups;
             break;
     }
+    if (!started) { return; }
+    if (currentPlayer.isAlive) {
+
+        socket.emit('movement', movement);
+        console.log('Moved');
+
+    }
 });
+var mouseFPS = 0;
 document.addEventListener("mousemove", function (event) {
+    mouseFPS += 1;
     hasMoved = true;
     var angle = Math.atan2(event.pageX - canvasWidth / 2, - (event.pageY - canvasHeight / 2));
     movement.rot = angle - 180 *Math.PI/180;
+    if(mouseFPS > 2){
+        mouseFPS = 0;
+        if (!started) { return; }
+            if (currentPlayer.isAlive) {
+
+                socket.emit('movement', movement);
+                console.log('Moved');
+
+            }
+    }
 });
 var lastClickTime = 0, nowTime;
 document.addEventListener("click", function (event) {
@@ -419,15 +456,6 @@ socket.on("get id from server", function (id) {
 
 
 var hasMoved = false;
-setInterval(function () {
-    if (!started) { return; }
-    if (currentPlayer.isAlive) {
-        if (movement.left || movement.right || movement.up || movement.down || hasMoved){
-            socket.emit('movement', movement);
-        }
-
-    }
-}, 1000 / 60);
 
 // Auto Fire
 AutoFire();
