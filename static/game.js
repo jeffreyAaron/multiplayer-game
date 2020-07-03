@@ -173,6 +173,7 @@ document.addEventListener('keyup', function (event) {
             break;
         case 69: // E
             autofire = !autofire;
+            break;
         case 49: // 1
             if (points > 0 && currentPlayer.bulletDamage < 8){
                 socket.emit("add to bulletDamage");
