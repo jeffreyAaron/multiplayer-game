@@ -665,4 +665,5 @@ function UpdateMovement(data, socket) {
         player.y -= playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
         player.vely -= playerInitVelocity;
     }
+    player.rot = data.rot;
 }
