@@ -95,7 +95,7 @@ var animatedParticles = [];
 init();
 function init() {
     SetupParticles(particlesCount);
-    SetupAi(1);
+    //SetupAi(1);
 }
 io.on('connection', function (socket) {
     socket.on('late', function (ms) {
@@ -120,33 +120,6 @@ io.on('connection', function (socket) {
     socket.on('cannon', function (data) {
         // CannonLaunch
         CannonLaunch(data, socket);
-
-    });
-    socket.on('get state', function (data) {
-        var time = new Date();
-        var leaders = [];
-        for (let id in players) {
-            if (players[id].isAlive == true) {
-                var newLeader = players[id];
-                newLeader.id = id;
-                leaders.push(newLeader)
-            }
-
-        }
-        leaders.sort((a, b) => b.score - a.score);
-        // Returns State To Player
-        io.sockets.emit('state', {
-            players: players,
-            bullets: bullets,
-            particles: particles,
-            leaderboard: leaders,
-            
-            animate: {
-                animatedBullets: animatedBullets,
-                animatedParticles: animatedParticles
-            },
-            time: time
-        });
 
     });
     socket.on('add to bulletDamage', function () {
@@ -198,9 +171,67 @@ io.on('connection', function (socket) {
     });
 });
 
-// High Priority
+// Lowest Priority
+setInterval(() => {
+    SetupParticles(particlesCount - particles.length);
+    for(var id in particles){
+        var particle = particles[id];
+        var resetData = particle;
+        UpdateParticleVelocity(particle);
+        UpdateParticleVelocity(particle);
+        //UpdateParticleVelocity(particle);
+        CheckParticleWallCollision(particle, resetData);
+        CheckParticleParticleCollision(particle);
+        CheckParticlePos(particle);
+    }
+}, 1000/4);
+
+// Medium Priority
 setInterval(function () {
-    for(var id in players){
+
+    UpdateBullets();
+    UpdateBullets();
+    UpdateBullets();
+    CheckBulletCollision();
+    CheckParticleCollision();
+    for (var id in particles) {
+        var particle = particles[id];
+        CheckParticleBulletCollision(particle);
+    }
+    CheckBulletWallCollision();
+    // Animation
+    Animate();
+
+    var time = new Date();
+    var leaders = [];
+    for (let id in players) {
+        if (players[id].isAlive == true) {
+            var newLeader = players[id];
+            newLeader.id = id;
+            leaders.push(newLeader)
+        }
+
+    }
+    leaders.sort((a, b) => b.score - a.score);
+    // Returns State To Player
+    io.sockets.emit('state', {
+        players: players,
+        bullets: bullets,
+        particles: particles,
+        leaderboard: leaders,
+
+        animate: {
+            animatedBullets: animatedBullets,
+            animatedParticles: animatedParticles
+        },
+        time: time
+    });
+
+}, 1000 / 20);
+
+setInterval(function () {
+    for (var id in players) {
+        UpdatePlayerLevel({ id: id });
         var player = players[id] || { x: 0, y: 0, velx: 0, vely: 0 };
         var resetTo = {
             x: player.x,
@@ -209,29 +240,15 @@ setInterval(function () {
             changey: player.vely
         };
         // Velocity
-        var socket = {id: id}
+        var socket = { id: id }
         UpdateVelocity(socket);
         CheckPlayerCollision(resetTo, socket);
         CheckWallCollision(resetTo, socket);
         CheckPos(socket);
-        UpdatePlayerLevel(socket);
+        
     }
-    UpdateBullets();
-    CheckBulletCollision();
-    CheckParticleCollision();
-    SetupParticles(particlesCount - particles.length);
-    for (var id in particles) {
-        var particle = particles[id];
-        var resetData = particle;
-        UpdateParticleVelocity(particle);
-        CheckParticleWallCollision(particle, resetData);
-        CheckParticleParticleCollision(particle);
-        CheckParticlePos(particle);
-        CheckParticleBulletCollision(particle);
-    }
-    CheckBulletWallCollision();
-    // Animation
-    Animate();
+
+    io.sockets.emit('playerState', players);
 }, 1000 / 60);
 
 

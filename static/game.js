@@ -36,6 +36,7 @@ var started = false;
 var particleSpeed = 0.5;
 var nozzleOff = 0;
 var nozzleOffStart = 4;
+var currentData;
 
 window.onload = function () {
     img = document.getElementById("backgroundTile");
@@ -74,7 +75,7 @@ var map = [
 // Player Specific Constants
 var autofire = false;
 var playerId = "";
-var points = 1000;
+var points = 0;
 var currentPlayer = {
     rot: 0,
     isAlive: true,
@@ -85,7 +86,7 @@ var currentPlayer = {
     health: 100
 };
 
-var socket = io();
+var socket = io({ transports: ["websocket"] });
 var movement = {
     rot: 0,
     up: false,
@@ -93,6 +94,7 @@ var movement = {
     left: false,
     right: false
 }
+
 document.addEventListener('keydown', function (event) {
     hasMoved = true;
     if (!started) { return; }
@@ -436,46 +438,31 @@ function end() {
 
 
 function Render() {
-    //socket.emit("update");
-    socket.emit("get state");
-    
-    
-    if(onScreenContext != undefined){
-    
-        if(canvas!=undefined){
-            onScreenContext.drawImage(canvas, 0, 0);
-        }
+    var data = currentData;
+    if(isNaN(points)){
+        points = 0;
     }
-    
-}
-
-setInterval(() => {
-    requestAnimationFrame(Render);
-}, 1000/30);
-
-var leaderBoardTick = 0;
-var skippedFrames = 0;
-socket.on('state', function (data) {
-    if(!started){return;}
+    if (started) {
     currentPlayer = data.players[playerId] || { x: 0, y: 0 };
-    if (Math.floor(currentPlayer.tankLevel) != Math.floor(oldLevel)){
-        points += Math.round(Math.abs(currentPlayer.tankLevel-oldLevel)*pointsPerLevel);
+    if (Math.floor(currentPlayer.tankLevel) != Math.floor(oldLevel)) {
+        points += Math.round(Math.abs(currentPlayer.tankLevel - oldLevel) * pointsPerLevel);
         oldLevel = currentPlayer.tankLevel;
     }
-    nozzleOff-= (nozzleOffStart-nozzleOff)/10 ;
-    if(nozzleOff < 0){
+    
+    nozzleOff -= (nozzleOffStart - nozzleOff) / 10;
+    if (nozzleOff < 0) {
         nozzleOff = 0;
     }
-    if(!showpowerups){
+    if (!showpowerups) {
         var on = 400;
-        
-        powerupoff -= Math.abs(on-Math.abs(powerupoff))/10;
 
-        if(powerupoff < -on){
+        powerupoff -= Math.abs(on - Math.abs(powerupoff)) / 10;
+
+        if (powerupoff < -on) {
             powerupoff = -on;
         }
-        
-    }else{
+
+    } else {
         var on = 500;
 
         powerupoff += Math.abs(0 - Math.abs(powerupoff)) / 10;
@@ -485,7 +472,7 @@ socket.on('state', function (data) {
         }
 
     }
-    console.log(new Date() - new Date(data.time));
+    //console.log(new Date() - new Date(data.time));
     start();
     if (data.players[playerId] == undefined) { return; }
     if (data.players[playerId].isAlive) {
@@ -536,9 +523,30 @@ socket.on('state', function (data) {
     else {
         ShowGameOverScreenAnim();
     }
-    //console.log(data);
+}
+    if(onScreenContext != undefined){
+    
+        if(canvas!=undefined){
+            onScreenContext.drawImage(canvas, 0, 0);
+        }
+    }
+    
+}
 
+setInterval(() => {
+    requestAnimationFrame(Render);
+}, 1000/60);
+
+var leaderBoardTick = 0;
+var skippedFrames = 0;
+socket.on('state', function (data) {
+    currentData = data;
 });
+
+socket.on('playerState', function (data) {
+    currentData.players = data;
+});
+
 
 function UpdateScreen(player, id) {
     DrawWeapon(player, id);
@@ -619,6 +627,8 @@ function DrawBackground(player) {
     for (let Yindex = 0; Yindex < landHeight / tileSize; Yindex++) {
         for (let Xindex = 0; Xindex < landWidth / tileSize; Xindex++) {
             if (map[Yindex][Xindex] == 0) {
+                context.fillStyle = 'white';
+                //ctx.fillRect(canvasWidth / 2 + player.x + Xindex * tileSize, canvasHeight / 2 + player.y + Yindex * tileSize, tileSize, tileSize)
                 ctx.drawImage(img, canvasWidth / 2 + player.x + Xindex * tileSize, canvasHeight / 2 + player.y + Yindex * tileSize, tileSize, tileSize);
             } else {
                 context.fillStyle = '#eb4034';
@@ -739,72 +749,89 @@ function DrawPlayer(player, id) {
 }
 
 function DrawBullets(bullet, id) {
-    context.beginPath();
-    context.fillStyle = '#777';
-    context.arc(canvasWidth / 2 + currentPlayer.x - bullet.x, canvasHeight / 2 + currentPlayer.y - bullet.y, cannonWidth / 2, 0, 2 * Math.PI);
-    context.fill();
+    var x = canvasWidth / 2 + currentPlayer.x - bullet.x;
+    var y = canvasHeight / 2 + currentPlayer.y - bullet.y
+    if (x <= -20 || x >= canvasWidth + 20 || y >= 20 || y <= -canvasHeight - 20) {
+
+        //return;
+    
+        context.beginPath();
+        context.fillStyle = '#777';
+        context.arc(x, y, cannonWidth / 2, 0, 2 * Math.PI);
+        context.fill();
+    }
 }
 
 function DrawAnimatedBullets(bullets) {
     for (var id in bullets) {
         var bullet = bullets[id];
+        var x = canvasWidth / 2 + currentPlayer.x - bullet.x;
+        var y = canvasHeight / 2 + currentPlayer.y - bullet.y
+        if (x <= -20 || x >= canvasWidth + 20 || y >= 20 || y <= -canvasHeight - 20){
+            
+        
         context.globalAlpha = bullet.opacity;
         context.beginPath();
         context.fillStyle = '#777';
-        context.arc(canvasWidth / 2 + currentPlayer.x - bullet.x, canvasHeight / 2 + currentPlayer.y - bullet.y, cannonWidth / 2, 0, 2 * Math.PI);
+        context.arc(x, y, cannonWidth / 2, 0, 2 * Math.PI);
         context.fill();
+        }
     }
 }
 
 function DrawAnimatedParticles(particlesList) {
     for (var id in particlesList) {
         var particles = particlesList[id];
-        context.globalAlpha = particles.opacity;
-        context.beginPath();
-        if (particles.type == 0) {
-            context.fillStyle = '#23c449';
-            var numberOfSides = 4,
-                size = particleSize / 2,
-                Xcenter = canvasWidth / 2 + currentPlayer.x - particles.x,
-                Ycenter = canvasHeight / 2 + currentPlayer.y - particles.y;
-
+        var x = canvasWidth / 2 + currentPlayer.x - particles.x;
+        var y = canvasHeight / 2 + currentPlayer.y - particles.y - 10;
+        if (x <= -20 || x >= canvasWidth + 20 || y >= 20 || y <= -canvasHeight - 20) {
+            context.globalAlpha = particles.opacity;
             context.beginPath();
-            context.moveTo(Xcenter + size * Math.cos(0), Ycenter + size * Math.sin(0));
+            if (particles.type == 0) {
+                context.fillStyle = '#23c449';
+                var numberOfSides = 4,
+                    size = particleSize / 2,
+                    Xcenter = canvasWidth / 2 + currentPlayer.x - particles.x,
+                    Ycenter = canvasHeight / 2 + currentPlayer.y - particles.y;
 
-            for (var i = 1; i <= numberOfSides; i += 1) {
-                context.lineTo(Xcenter + size * Math.cos(i * 2 * Math.PI / numberOfSides), Ycenter + size * Math.sin(i * 2 * Math.PI / numberOfSides));
+                context.beginPath();
+                context.moveTo(Xcenter + size * Math.cos(0), Ycenter + size * Math.sin(0));
+
+                for (var i = 1; i <= numberOfSides; i += 1) {
+                    context.lineTo(Xcenter + size * Math.cos(i * 2 * Math.PI / numberOfSides), Ycenter + size * Math.sin(i * 2 * Math.PI / numberOfSides));
+                }
+
+                context.fill();
+                context.fill();
+            } else if (particles.type == 1) {
+                var X = canvasWidth / 2 + currentPlayer.x - particles.x;
+                var Y = canvasHeight / 2 + currentPlayer.y - particles.y - 10;
+                context.fillStyle = '#fcba03';
+                var height = particleSize * (Math.sqrt(3) / 2);
+                context.beginPath();
+                context.moveTo(X, Y);
+                context.lineTo(X + particleSize / 2, Y + height);
+                context.lineTo(X - particleSize / 2, Y + height);
+                context.lineTo(X, Y);
+                context.fill();
+                context.closePath();
+
+            } else {
+                context.fillStyle = '#8b6df7';
+                var numberOfSides = 6,
+                    size = particleSize / 2,
+                    Xcenter = canvasWidth / 2 + currentPlayer.x - particles.x,
+                    Ycenter = canvasHeight / 2 + currentPlayer.y - particles.y;
+
+                context.beginPath();
+                context.moveTo(Xcenter + size * Math.cos(0), Ycenter + size * Math.sin(0));
+
+                for (var i = 1; i <= numberOfSides; i += 1) {
+                    context.lineTo(Xcenter + size * Math.cos(i * 2 * Math.PI / numberOfSides), Ycenter + size * Math.sin(i * 2 * Math.PI / numberOfSides));
+                }
+
+                context.fill();
             }
-
-            context.fill();
-            context.fill();
-        } else if (particles.type == 1) {
-            var X = canvasWidth / 2 + currentPlayer.x - particles.x;
-            var Y = canvasHeight / 2 + currentPlayer.y - particles.y - 10;
-            context.fillStyle = '#fcba03';
-            var height = particleSize * (Math.sqrt(3) / 2);
-            context.beginPath();
-            context.moveTo(X, Y);
-            context.lineTo(X + particleSize / 2, Y + height);
-            context.lineTo(X - particleSize / 2, Y + height);
-            context.lineTo(X, Y);
-            context.fill();
-            context.closePath();
-
-        } else {
-            context.fillStyle = '#8b6df7';
-            var numberOfSides = 6,
-                size = particleSize / 2,
-                Xcenter = canvasWidth / 2 + currentPlayer.x - particles.x,
-                Ycenter = canvasHeight / 2 + currentPlayer.y - particles.y;
-
-            context.beginPath();
-            context.moveTo(Xcenter + size * Math.cos(0), Ycenter + size * Math.sin(0));
-
-            for (var i = 1; i <= numberOfSides; i += 1) {
-                context.lineTo(Xcenter + size * Math.cos(i * 2 * Math.PI / numberOfSides), Ycenter + size * Math.sin(i * 2 * Math.PI / numberOfSides));
-            }
-
-            context.fill();
         }
     }
 }
