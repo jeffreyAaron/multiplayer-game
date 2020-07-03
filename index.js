@@ -225,7 +225,7 @@ setInterval(function () {
 }, 1000 / 10);
 
 setInterval(function () {
-    UpdateBullets();
+    
     for (var id in players) {
         UpdatePlayerLevel({ id: id });
         var player = players[id] || { x: 0, y: 0, velx: 0, vely: 0 };
@@ -241,7 +241,7 @@ setInterval(function () {
         CheckPlayerCollision(resetTo, socket);
         CheckWallCollision(resetTo, socket);
         CheckPos(socket);
-        
+        UpdateBullets();
     }
 
     io.sockets.emit('subState', [players, bullets]);
