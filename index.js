@@ -24,8 +24,8 @@ var particleHealthGain = 5;
 var particlesCount = 200;
 var leaderBoardCount = 10;
 var particleSpeed = 0.3;
-var bulletAnimationSpeed = 0.08;
-var particleAnimationSpeed = 0.08;
+var bulletAnimationSpeed = 1;
+var particleAnimationSpeed = 0.3;
 var latency = 0;
 var levelUpAmount = 20;
 var bulletVelocity = 1.01;
@@ -177,9 +177,6 @@ setInterval(() => {
     for(var id in particles){
         var particle = particles[id];
         var resetData = particle;
-        UpdateParticleVelocity(particle);
-        UpdateParticleVelocity(particle);
-        //UpdateParticleVelocity(particle);
         CheckParticleWallCollision(particle, resetData);
         CheckParticleParticleCollision(particle);
         CheckParticlePos(particle);
@@ -188,10 +185,10 @@ setInterval(() => {
 
 // Medium Priority
 setInterval(function () {
-
-    UpdateBullets();
-    UpdateBullets();
-    UpdateBullets();
+    for (var id in particles) {
+        var particle = particles[id];
+        UpdateParticleVelocity(particle);
+    }
     CheckBulletCollision();
     CheckParticleCollision();
     for (var id in particles) {
@@ -215,8 +212,6 @@ setInterval(function () {
     leaders.sort((a, b) => b.score - a.score);
     // Returns State To Player
     io.sockets.emit('state', {
-        players: players,
-        bullets: bullets,
         particles: particles,
         leaderboard: leaders,
 
@@ -227,9 +222,10 @@ setInterval(function () {
         time: time
     });
 
-}, 1000 / 20);
+}, 1000 / 10);
 
 setInterval(function () {
+    UpdateBullets();
     for (var id in players) {
         UpdatePlayerLevel({ id: id });
         var player = players[id] || { x: 0, y: 0, velx: 0, vely: 0 };
@@ -248,7 +244,7 @@ setInterval(function () {
         
     }
 
-    io.sockets.emit('playerState', players);
+    io.sockets.emit('subState', [players, bullets]);
 }, 1000 / 60);
 
 
