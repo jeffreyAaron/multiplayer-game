@@ -226,6 +226,7 @@ setInterval(function () {
 
 setInterval(function () {
     
+    UpdateBullets();
     for (var id in players) {
         var socket = { id: id }
         UpdatePlayerLevel(socket);
@@ -243,7 +244,6 @@ setInterval(function () {
         CheckPlayerCollision(resetTo, socket);
         CheckWallCollision(resetTo, socket);
         CheckPos(socket);
-        UpdateBullets();
     }
 
     io.sockets.emit('subState', [players, bullets]);
@@ -653,7 +653,7 @@ function UpdateParticleVelocity(particle) {
 function UpdateMovementData(data, socket) {
     var player = players[socket.id] || {};
     player.left = data.left;
-    player.up = data.up;
+    player.up = data.up; 
     player.right = data.right;
     player.down = data.down;
     player.rot = data.rot;
