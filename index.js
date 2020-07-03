@@ -9,7 +9,7 @@ var canvasHeight = 600;
 var playerRadius = 20;
 var cannonWidth = 20;
 var cannonLength = 40;
-var cannonLife = 500;
+var cannonLife = 100;
 var bulletMultiplier = 5;
 var bulletFireTime = 500;
 var playerMoveSpeed = 0;
@@ -28,19 +28,31 @@ var bulletAnimationSpeed = 0.08;
 var particleAnimationSpeed = 0.08;
 var latency = 0;
 var levelUpAmount = 20;
+var bulletVelocity = 1.01;
+var bulletVelocityStop = 480;
 
 // Land Configuration
 var map = [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
 
@@ -72,6 +84,7 @@ server.listen(process.env.PORT || 5000, function () {
 var players = {};
 var bullets = [];
 var particles = [];
+var ai = [];
 
 // Animation
 var animatedBullets = [];
@@ -82,6 +95,7 @@ var animatedParticles = [];
 init();
 function init() {
     SetupParticles(particlesCount);
+    //SetupAi(1);
 }
 io.on('connection', function (socket) {
     socket.on('late', function (ms) {
@@ -103,55 +117,9 @@ io.on('connection', function (socket) {
         UpdateMovement(data, socket);
 
     });
-    socket.on('update', function () {
-        var player = players[socket.id] || { x: 0, y: 0, velx: 0, vely: 0 };
-        var resetTo = {
-            x: player.x,
-            y: player.y,
-            changex: player.velx,
-            changey: player.vely
-        };
-        // Velocity
-
-        UpdateVelocity(socket);
-        CheckPlayerCollision(resetTo, socket);
-        CheckWallCollision(resetTo, socket);
-        CheckPos(socket);
-        UpdatePlayerLevel(socket);
-
-
-
-    });
     socket.on('cannon', function (data) {
         // CannonLaunch
         CannonLaunch(data, socket);
-
-    });
-    socket.on('get state', function (data) {
-        var time = new Date();
-        var leaders = [];
-        for (let id in players) {
-            if (players[id].isAlive == true) {
-                var newLeader = players[id];
-                newLeader.id = id;
-                leaders.push(newLeader)
-            }
-
-        }
-        leaders.sort((a, b) => b.score - a.score);
-        // Returns State To Player
-        io.sockets.compress(true).emit('state', {
-            players: players,
-            bullets: bullets,
-            particles: particles,
-            leaderboard: leaders,
-            
-            animate: {
-                animatedBullets: animatedBullets,
-                animatedParticles: animatedParticles
-            },
-            time: time
-        });
 
     });
     socket.on('add to bulletDamage', function () {
@@ -203,28 +171,84 @@ io.on('connection', function (socket) {
     });
 });
 
-// Low Priority
-setInterval(function () {
-    // Update State
-    UpdateBullets();
+// Lowest Priority
+setInterval(() => {
     SetupParticles(particlesCount - particles.length);
-    for (var id in particles) {
+    for(var id in particles){
         var particle = particles[id];
         var resetData = particle;
         UpdateParticleVelocity(particle);
+        UpdateParticleVelocity(particle);
+        //UpdateParticleVelocity(particle);
         CheckParticleWallCollision(particle, resetData);
         CheckParticleParticleCollision(particle);
         CheckParticlePos(particle);
+    }
+}, 1000/4);
+
+// Medium Priority
+setInterval(function () {
+
+    UpdateBullets();
+    UpdateBullets();
+    UpdateBullets();
+    CheckBulletCollision();
+    CheckParticleCollision();
+    for (var id in particles) {
+        var particle = particles[id];
         CheckParticleBulletCollision(particle);
     }
     CheckBulletWallCollision();
     // Animation
     Animate();
-}, 1000 / 30);
+
+    var time = new Date();
+    var leaders = [];
+    for (let id in players) {
+        if (players[id].isAlive == true) {
+            var newLeader = players[id];
+            newLeader.id = id;
+            leaders.push(newLeader)
+        }
+
+    }
+    leaders.sort((a, b) => b.score - a.score);
+    // Returns State To Player
+    io.sockets.emit('state', {
+        players: players,
+        bullets: bullets,
+        particles: particles,
+        leaderboard: leaders,
+
+        animate: {
+            animatedBullets: animatedBullets,
+            animatedParticles: animatedParticles
+        },
+        time: time
+    });
+
+}, 1000 / 20);
 
 setInterval(function () {
-    CheckBulletCollision();
-    CheckParticleCollision();
+    for (var id in players) {
+        UpdatePlayerLevel({ id: id });
+        var player = players[id] || { x: 0, y: 0, velx: 0, vely: 0 };
+        var resetTo = {
+            x: player.x,
+            y: player.y,
+            changex: player.velx,
+            changey: player.vely
+        };
+        // Velocity
+        var socket = { id: id }
+        UpdateVelocity(socket);
+        CheckPlayerCollision(resetTo, socket);
+        CheckWallCollision(resetTo, socket);
+        CheckPos(socket);
+        
+    }
+
+    io.sockets.emit('playerState', players);
 }, 1000 / 60);
 
 
@@ -243,6 +267,10 @@ function Animate() {
             animatedParticles.splice(animatedParticles.indexOf(particle), 1);
         }
     }
+}
+
+function SetupAi (count){
+
 }
 
 function SetupParticles(count) {
@@ -539,11 +567,18 @@ function CannonLaunch(data, socket) {
 }
 
 function UpdateBullets() {
+
     var deletelist = [];
     for (var id in bullets) {
         var bullet = bullets[id];
+        if (bullet.life > bulletVelocityStop) {
+        bullet.changex *= bulletVelocity;
+        bullet.changey *= bulletVelocity;
+        }
+       
         bullet.x += bullet.changex;
         bullet.y += bullet.changey;
+        
         bullet.life--;
         if (bullet.life < 0) {
             bullet.life = 0;
@@ -615,19 +650,19 @@ function UpdateParticleVelocity(particle) {
 function UpdateMovement(data, socket) {
     var player = players[socket.id] || {};
     if (data.left) {
-        player.x += playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency/8);
+        player.x += playerMoveSpeed;
         player.velx += playerInitVelocity ;
     }
     if (data.up) {
-        player.y += playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
+        player.y += playerMoveSpeed;
         player.vely += playerInitVelocity ;
     }
     if (data.right) {
-        player.x -= playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
+        player.x -= playerMoveSpeed;
         player.velx -= playerInitVelocity ;
     }
     if (data.down) {
-        player.y -= playerMoveSpeed * latency + (player.movementSpeed * playerMoveSpeed * latency / 8);
+        player.y -= playerMoveSpeed;
         player.vely -= playerInitVelocity ;
     }
     player.rot = data.rot;
