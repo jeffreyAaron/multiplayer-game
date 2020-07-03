@@ -647,8 +647,11 @@ function DrawMap(data){
     var pixelSize = 6;
     ctx.save();
     ctx.translate(canvasWidth - pixelSize * map[0].length, canvasHeight - pixelSize * map.length)
-    context.fillStyle = "#9c9c9c";
+    context.fillStyle = "#dbdbdb";
     ctx.fillRect(-15, -15, pixelSize * (map[0].length), pixelSize * (map.length));
+    context.strokeStyle = "grey";
+    context.lineWidth = 4;
+    ctx.strokeRect(-15, -15, pixelSize * (map[0].length), pixelSize * (map.length));
     for(var id in data){
         context.fillStyle = "#eb4034";
         var player = data[id];
