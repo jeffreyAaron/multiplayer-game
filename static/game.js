@@ -2,7 +2,7 @@
 
 // Important Constants
 var tileSize = 250;
-var landWidth = tileSize * 17;
+var landWidth = tileSize * 34;
 var landHeight = tileSize * 10;
 var canvasWidth = 800;
 var canvasHeight = 600;
@@ -50,7 +50,7 @@ var gameOverAnimSpeed = 0.0005;
 
 // Land Configuration
 var map = [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -570,8 +570,8 @@ function Render() {
             DrawLeaderBoard(leaders);
         }
         DrawLevel();
+        DrawMap(data.players);
         DrawPowerups(currentPlayer.bulletDamage, currentPlayer.bulletPenetration, currentPlayer.bulletSpeed, currentPlayer.reload, currentPlayer.movementSpeed)
-        DrawMap();
     }
     else {
         ShowGameOverScreenAnim();
@@ -642,12 +642,27 @@ function DrawLevel(){
     ctx.fillText("Level: " + ~~level , 10, 30);
 }
 
-function DrawMap(){
+function DrawMap(data){
     var ctx = context;
-    ctx.save()
-    ctx.translate(canvasWidth, canvasHeight);
-    ctx.fillText("Levesl: ", 10, 30);
-
+    var pixelSize = 6;
+    ctx.save();
+    ctx.translate(canvasWidth - pixelSize * map[0].length, canvasHeight - pixelSize * map.length)
+    context.fillStyle = "#9c9c9c";
+    ctx.fillRect(-15, -15, pixelSize * (map[0].length), pixelSize * (map.length));
+    for(var id in data){
+        context.fillStyle = "#eb4034";
+        var player = data[id];
+        if(!player.isAlive){
+            continue;
+        }
+        ctx.beginPath();
+        ctx.arc(-15 - pixelSize * player.x / (tileSize), -15 - pixelSize * player.y / (tileSize), 6, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+    context.fillStyle = "#4287f5";
+    ctx.beginPath();
+    ctx.arc(-15 -pixelSize * currentPlayer.x / (tileSize), -15-pixelSize * currentPlayer.y / (tileSize), 6, 0, 2 * Math.PI);
+    ctx.fill();
     ctx.restore();
 }
 
@@ -684,7 +699,7 @@ function DrawBackground(player) {
     for (let Yindex = 0; Yindex < landHeight / tileSize; Yindex++) {
         for (let Xindex = 0; Xindex < landWidth / tileSize; Xindex++) {
             if (map[Yindex][Xindex] == 0) {
-                context.fillStyle = 'white';
+                //context.fillStyle = 'white';
                 //ctx.fillRect(canvasWidth / 2 + player.x + Xindex * tileSize, canvasHeight / 2 + player.y + Yindex * tileSize, tileSize, tileSize)
                 ctx.drawImage(img, canvasWidth / 2 + player.x + Xindex * tileSize, canvasHeight / 2 + player.y + Yindex * tileSize, tileSize, tileSize);
             } else {
@@ -790,14 +805,30 @@ function DrawWeapon(player, id) {
 function DrawPlayer(player, id) {
     context.beginPath();
     var ctx = context;
+    var x, y;
     if (id == playerId) {
+        x = canvasWidth / 2;
+        y = canvasHeight / 2;
         context.fillStyle = '#4287f5';
-        context.arc(canvasWidth / 2, canvasHeight / 2, playerRadius, 0, 2 * Math.PI);
+        context.arc(x, y, playerRadius, 0, 2 * Math.PI);
+        context.fill();
+        ctx.font = "500 16px Segoe UI";
+        ctx.textAlign = "center";
+        context.fillStyle = '#4287f5';
+        context.fillText(player.name, x, y + 50);
     } else {
+        x = canvasWidth / 2 + currentPlayer.x - player.x;
+        y = canvasHeight / 2 + currentPlayer.y - player.y;
         context.fillStyle = '#eb4034';
-        context.arc(canvasWidth / 2 + currentPlayer.x - player.x, canvasHeight / 2 + currentPlayer.y - player.y, playerRadius, 0, 2 * Math.PI);
+        context.arc(x, y, playerRadius, 0, 2 * Math.PI);
+        context.fill();
+        ctx.font = "500 16px Segoe UI";
+        ctx.textAlign = "center";
+        context.fillStyle = '#eb4034';
+        context.fillText(player.name, x, y+50);
     }
-    context.fill();
+    ctx.textAlign = "start";
+    
     // Health Bar
     ctx.beginPath();
     context.strokeStyle = '#666';
