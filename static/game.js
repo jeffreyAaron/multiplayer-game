@@ -532,7 +532,7 @@ function Render() {
             if (!player.isAlive) { continue; }
             UpdateScreen(player, id);
         }
-        DrawAnimatedBullets(data.animate.animatedBullets);
+        //DrawAnimatedBullets(data.animate.animatedBullets);
         context.globalAlpha = 1;
         if (leaderBoardTick < 60) {
             leaderBoardTick++;

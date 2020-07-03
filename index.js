@@ -216,7 +216,7 @@ setInterval(function () {
         leaderboard: leaders,
 
         animate: {
-            animatedBullets: animatedBullets,
+            
             animatedParticles: animatedParticles
         },
         time: time
@@ -225,7 +225,7 @@ setInterval(function () {
 }, 1000 / 10);
 
 setInterval(function () {
-    UpdateBullets();
+    
     for (var id in players) {
         UpdatePlayerLevel({ id: id });
         var player = players[id] || { x: 0, y: 0, velx: 0, vely: 0 };
@@ -241,7 +241,7 @@ setInterval(function () {
         CheckPlayerCollision(resetTo, socket);
         CheckWallCollision(resetTo, socket);
         CheckPos(socket);
-        
+        UpdateBullets();
     }
 
     io.sockets.emit('subState', [players, bullets]);
@@ -249,13 +249,13 @@ setInterval(function () {
 
 
 function Animate() {
-    for (var id in animatedBullets) {
-        var bullet = animatedBullets[id];
-        bullet.opacity -= bulletAnimationSpeed;
-        if (bullet.opacity < 0) {
-            animatedBullets.splice(animatedBullets.indexOf(bullet), 1);
-        }
-    }
+    // for (var id in animatedBullets) {
+    //     var bullet = animatedBullets[id];
+    //     bullet.opacity -= bulletAnimationSpeed;
+    //     if (bullet.opacity < 0) {
+    //         animatedBullets.splice(animatedBullets.indexOf(bullet), 1);
+    //     }
+    // }
     for (var id in animatedParticles) {
         var particle = animatedParticles[id];
         particle.opacity -= particleAnimationSpeed;
@@ -394,7 +394,7 @@ function CheckBulletCollision() {
                     players[id].isAlive = false;
                     players[id].health = 0;
                 }
-                animatedBullets.push(bullet);
+                //animatedBullets.push(bullet);
                 bullets.splice(bullets.indexOf(bullet), 1);
             }
         }
@@ -411,7 +411,7 @@ function CheckParticleBulletCollision(particle) {
         var disty = Math.pow(Math.abs(testOn.y - bullet.y), 2);
         var totalDist = Math.sqrt(distx + disty);
         if (totalDist < (playerRadius + cannonWidth) / 2) {
-            animatedBullets.push(bullet);
+            //animatedBullets.push(bullet);
             animatedParticles.push(particle);
             particles.splice(particles.indexOf(particle), 1);
             bullets.splice(bullets.indexOf(bullet), 1);
@@ -539,7 +539,7 @@ function CheckBulletWallCollision() {
                     //console.log("B " +blockx + "  " +blocky);
                     //console.log(playerx + "  " + playery);
                     if (playerx >= blockx && playerx <= blockx + tileSize && playery >= blocky && playery <= blocky + tileSize) {
-                        animatedBullets.push(bullet);
+                        //animatedBullets.push(bullet);
                         bullets.splice(bullets.indexOf(bullet), 1);
 
                     }
@@ -581,7 +581,7 @@ function UpdateBullets() {
             deletelist.push(bullet);
         }
     }
-    animatedBullets.push(deletelist);
+    //animatedBullets.push(deletelist);
     for (var id in deletelist) {
         var deleted = bullets[id];
         bullets.splice(bullets.indexOf(deleted), 1);
