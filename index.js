@@ -249,13 +249,13 @@ setInterval(function () {
 
 
 function Animate() {
-    for (var id in animatedBullets) {
-        var bullet = animatedBullets[id];
-        bullet.opacity -= bulletAnimationSpeed;
-        if (bullet.opacity < 0) {
-            animatedBullets.splice(animatedBullets.indexOf(bullet), 1);
-        }
-    }
+    // for (var id in animatedBullets) {
+    //     var bullet = animatedBullets[id];
+    //     bullet.opacity -= bulletAnimationSpeed;
+    //     if (bullet.opacity < 0) {
+    //         animatedBullets.splice(animatedBullets.indexOf(bullet), 1);
+    //     }
+    // }
     for (var id in animatedParticles) {
         var particle = animatedParticles[id];
         particle.opacity -= particleAnimationSpeed;
@@ -369,7 +369,7 @@ function CheckParticleCollision() {
                 if (players[id].health >= 100) {
                     players[id].health = 100;
                 }
-                animatedParticles.push(bullet);
+                //animatedParticles.push(bullet);
                 particles.splice(particles.indexOf(bullet), 1);
             }
         }
