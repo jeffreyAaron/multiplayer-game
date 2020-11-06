@@ -21,7 +21,7 @@ var bulletHealthLoss = 5;
 var playerHealthLoss = 0.05;
 var particleSize = 30;
 var particleHealthGain = 5;
-var particlesCount = 2000;
+var particlesCount = 500;
 var leaderBoardCount = 10;
 var particleSpeed = 0.3;
 var bulletAnimationSpeed = 0.08;
@@ -81,14 +81,15 @@ server.listen(process.env.PORT || 3000, function () {
 
 // AI
 
-let population = 1000;
+let population = 500;
 
 let { NEAT, activation, crossover, mutate } = require('neat_net-js');
 
 let config = {
     model: [
-        { nodeCount: 5, type: "input" },
-        { nodeCount: 4, type: "output", activationfunc: activation.RELU }
+        { nodeCount: 4, type: "input" },
+        { nodeCount: 4, type: "hidden", activationfunc: activation.SIGMOID },
+        { nodeCount: 4, type: "output", activationfunc: activation.SIGMOID }
     ],
     mutationRate: 0.05,
     crossoverMethod: crossover.RANDOM,
@@ -113,6 +114,32 @@ function getNearestParticleDist(id) {
     });
 
     return { xoff: particled.x - player.x, yoff: particled.y - player.y}
+}
+
+
+function getNearestPlayerDist(id) {
+    var player = players[id];
+    var lowest = 200000;
+    var particled = { x: 0, y: 0 };
+    for (let index = 0; index < players.length; index++) {
+        const particle = players[index];
+        if (index == id){
+            continue;
+        }
+            
+
+            var a = player.x - particle.x;
+            var b = player.y - particle.y;
+
+            var c = Math.sqrt(a * a + b * b);
+            if (c < lowest) {
+                lowest = c;
+                particled = particle;
+            }
+        
+    }
+
+    return { xoff: particled.x - player.x, yoff: particled.y - player.y }
 }
 
 var neat;
@@ -143,7 +170,7 @@ function updateAi(fast){
         // AI Portion
         var id = ai[index];
 
-        neat.setInputs([getNearestParticleDist(id).xoff, getNearestParticleDist(id).yoff, players[id].velx, players[id].vely, players[id].health], id);
+        neat.setInputs([getNearestParticleDist(id).xoff, getNearestParticleDist(id).yoff, getNearestPlayerDist(id).xoff, getNearestPlayerDist(id).yoff], id);
         
     }
 
@@ -195,7 +222,7 @@ function updateAi(fast){
         }
 
         for (let i = 0; i < population; i++) {
-            neat.setFitness(players[ai[i]].score, i);
+            neat.setFitness(players[ai[i]].score * players[ai[i]].health * players[ai[i]].health * players[ai[i]].health, i);
 
 
         }
