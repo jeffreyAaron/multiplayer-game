@@ -64,7 +64,7 @@ var app = express();
 var server = http.createServer(app);
 var socketIO = require('socket.io')(server, { wsEngine: 'ws' });
 var io = socketIO;
-app.set('port', process.env.PORT || 5000);
+app.set('port', process.env.PORT || 3000);
 // Routing
 app.use('/static', express.static(__dirname + '/static'));
 app.use('/textures', express.static(__dirname + '/textures'));
@@ -74,8 +74,8 @@ app.get('/', function (request, response) {
 
 
 // Starts the server.
-server.listen(process.env.PORT || 5000, function () {
-    console.log('Starting server on port ' + (process.env.PORT || 5000));
+server.listen(process.env.PORT || 3000, function () {
+    console.log('Starting server on port ' + (process.env.PORT || 3000));
     
 });
 
