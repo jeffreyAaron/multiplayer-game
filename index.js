@@ -87,7 +87,7 @@ let { NEAT, activation, crossover, mutate } = require('neat_net-js');
 
 let config = {
     model: [
-        { nodeCount: 4, type: "input" },
+        { nodeCount: 2, type: "input" },
         { nodeCount: 4, type: "hidden", activationfunc: activation.SIGMOID },
         { nodeCount: 4, type: "output", activationfunc: activation.SIGMOID }
     ],
@@ -170,7 +170,7 @@ function updateAi(fast){
         // AI Portion
         var id = ai[index];
 
-        neat.setInputs([getNearestParticleDist(id).xoff, getNearestParticleDist(id).yoff, getNearestPlayerDist(id).xoff, getNearestPlayerDist(id).yoff], id);
+        neat.setInputs([getNearestParticleDist(id).xoff, getNearestParticleDist(id).yoff/*, getNearestPlayerDist(id).xoff, getNearestPlayerDist(id).yoff*/], id);
         
     }
 
